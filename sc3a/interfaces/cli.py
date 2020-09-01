@@ -22,9 +22,9 @@ input_group.add_argument('-s', '--sol', metavar='PATH', type=Text, dest='sol_pat
 input_group.add_argument('-a', '--address', metavar='ADDRESS', type=Text, dest='address',
                          help='contract address to analyze')
 
-parser.add_argument_group('networking options')
-parser.add_argument('--rpc', metavar="RPC", type=Text,
-                    dest='rpc', help='web3 provider')
+networking_group = parser.add_argument_group('networking arguments')
+networking_group.add_argument('--rpc', metavar="RPC", type=Text,
+                              dest='rpc', help='web3 provider')
 
 args = parser.parse_args()
 

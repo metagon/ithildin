@@ -30,5 +30,7 @@ optional arguments:
   -s PATH, --sol PATH   path to solidity contract
   -a ADDRESS, --address ADDRESS
                         contract address to analyze
+
+networking arguments:
   --rpc RPC             web3 provider
 ```
