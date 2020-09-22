@@ -26,11 +26,7 @@ class FileLoader(ContractLoader, ABC):
 
 class BinaryLoader(FileLoader):
 
-    def __init__(self, file_path):
-        super().__init__(file_path)
-
     def contract(self) -> EVMContract:
-        bytecode = None
         try:
             with open(self._file_path) as contract_bin:
                 bytecode = contract_bin.read()
@@ -41,9 +37,6 @@ class BinaryLoader(FileLoader):
 
 
 class SolidityLoader(FileLoader):
-
-    def __init__(self, file_path):
-        super().__init__(file_path)
 
     def contract(self) -> EVMContract:
         return SolidityContract(self._file_path)

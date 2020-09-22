@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from sys import exit
-import sc3a.interfaces.cli
+from sc3a.interfaces.cli import main, parse_cli_args
 
 if __name__ == "__main__":
-    sc3a.interfaces.cli.main()
+    main(parse_cli_args())
     exit(0)

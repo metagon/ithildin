@@ -11,14 +11,10 @@ log = logging.getLogger(__name__)
 
 class SingleOwnerStrategy(AnalysisStrategy):
 
-    def __init__(self, contract: EVMContract):
-        super().__init__(contract)
-        log.debug('SingleOwner strategy has been initialized')
-
-    def execute(self) -> Optional[List[Text]]:
+    def execute(self, contract: EVMContract) -> Optional[List[Text]]:
         log.info('Running symbolic execution')
         laser = svm.LaserEVM()
-        laser.sym_exec(creation_code=self.contract.creation_disassembly.bytecode,
+        laser.sym_exec(creation_code=contract.creation_disassembly.bytecode,
                        contract_name="Unknown")
         storage_addresses = self._analyze(laser.nodes)
         return list(storage_addresses)
