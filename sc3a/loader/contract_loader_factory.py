@@ -21,7 +21,7 @@ class ContractLoaderFactory(ABC):
 
     @property
     @abstractmethod
-    def _required_options(self) -> Set:
+    def _required_options(self) -> Set[Text]:
         pass
 
     @abstractmethod
@@ -35,7 +35,7 @@ class BinaryLoaderFactory(ContractLoaderFactory):
         return BinaryLoader(self._options.get('path'))
 
     @property
-    def _required_options(self) -> Set:
+    def _required_options(self) -> Set[Text]:
         return {'path'}
 
 
@@ -45,15 +45,15 @@ class SolidityLoaderFactory(ContractLoaderFactory):
         return SolidityLoader(self._options.get('path'))
 
     @property
-    def _required_options(self) -> Set:
+    def _required_options(self) -> Set[Text]:
         return {'path'}
 
 
-def get_factory(type: LoaderFactoryType, **options) -> ContractLoaderFactory:
+def get_factory(loader_type: LoaderFactoryType, **options) -> ContractLoaderFactory:
     switcher = {
-        LoaderFactoryType.BINARY:   BinaryLoaderFactory(**options),
-        LoaderFactoryType.SOLIDITY: SolidityLoaderFactory(**options)
+        LoaderFactoryType.BINARY:   BinaryLoaderFactory,
+        LoaderFactoryType.SOLIDITY: SolidityLoaderFactory
     }
-    if type not in switcher:
+    if loader_type not in switcher:
         raise NotImplementedError('This factory has not been implemented yet')
-    return switcher.get(type)
+    return switcher.get(loader_type)(**options)
