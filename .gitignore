@@ -142,4 +142,5 @@ cython_debug/
 
 # Project Specific
 bin/
+logs/out.*
 contracts/
