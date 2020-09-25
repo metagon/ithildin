@@ -18,12 +18,11 @@ class SingleOwnerStrategy(AnalysisStrategy):
     def execute(self, contract: EVMContract) -> Optional[List[Text]]:
         log.info('Running symbolic execution')
         laser = svm.LaserEVM()
-        laser.sym_exec(creation_code=contract.creation_disassembly.bytecode,
-                       contract_name="Unknown")
+        laser.sym_exec(creation_code=contract.creation_disassembly.bytecode, contract_name="Unknown")
         storage_addresses = self._analyze(laser.nodes)
         return list(storage_addresses)
 
-    def _is_unsat(self, proposition: Constraints):
+    def _is_unsat(self, proposition: Constraints) -> bool:
         """
         Checks if the *proposition* is unsatisfiable.
         Parameters
@@ -60,8 +59,7 @@ class SingleOwnerStrategy(AnalysisStrategy):
                     # in the next state in case it is a symbol.
                     caller = node.states[sidx + 1].mstate.stack[-1]
                     if caller.symbolic:
-                        log.debug('Found CALLER symbol "%s" in <node=%i, state=%i>',
-                                  caller, nidx, sidx)
+                        log.debug('Found CALLER symbol "%s" in <node=%i, state=%i>', caller, nidx, sidx)
                     else:
                         caller = None
                 elif state.instruction['opcode'] == 'SLOAD':
@@ -69,8 +67,7 @@ class SingleOwnerStrategy(AnalysisStrategy):
                     # item from the next stack in case the latter is a symbol.
                     storage_item = node.states[sidx + 1].mstate.stack[-1]
                     if storage_item.symbolic:
-                        log.debug('Found SLOAD instruction in <node=%i, state=%i>',
-                                  nidx, sidx)
+                        log.debug('Found SLOAD instruction in <node=%i, state=%i>', nidx, sidx)
                         storage_address = state.mstate.stack[-1]
                     else:
                         storage_item = None
@@ -80,8 +77,7 @@ class SingleOwnerStrategy(AnalysisStrategy):
                     # Next, we check if the two items are always equal to the two items that
                     # we have previously stored. If that is the case, we keep the storage
                     # address that we got from the SLOAD operation.
-                    log.debug('Found EQ instruction in <node=%i, state=%i>',
-                              nidx, sidx)
+                    log.debug('Found EQ instruction in <node=%i, state=%i>', nidx, sidx)
                     stack_0 = state.mstate.stack[-1]
                     stack_1 = state.mstate.stack[-2]
                     if not stack_0.symbolic or not stack_1.symbolic:

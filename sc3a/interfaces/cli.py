@@ -25,8 +25,7 @@ def parse_cli_args() -> ContractLoaderFactory:
                              help='contract address to analyze')
 
     networking_group = parser.add_argument_group('networking arguments')
-    networking_group.add_argument('--rpc', metavar="RPC", type=Text,
-                                  dest='rpc', help='web3 provider')
+    networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='web3 provider')
 
     args = parser.parse_args()
 
