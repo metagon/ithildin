@@ -17,9 +17,9 @@ Alternatively create a virutalenv and install mythril there.
 
 ```
 $ cd <directory to project root>
-$ ./sca.py --help
+$ ./sca --help
 
-usage: sca.py [-h] [-v] (-b PATH | -s PATH | -a ADDRESS) [--rpc RPC]
+usage: sca [-h] [-v] (-b PATH | -s PATH | -a ADDRESS) [--rpc RPC]
 
 SC3A - Smart Contract Advanced Administrator Analyzer
 
