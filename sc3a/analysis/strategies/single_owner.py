@@ -77,6 +77,9 @@ class SingleOwnerStrategy(AnalysisStrategy):
                     # Next, we check if the two items are always equal to the two items that
                     # we have previously stored. If that is the case, we keep the storage
                     # address that we got from the SLOAD operation.
+                    if storage_item is None or caller is None:
+                        # SLOAD and CALLER haven't been called within the same node
+                        continue
                     log.debug('Found EQ instruction in <node=%i, state=%i>', nidx, sidx)
                     stack_0 = state.mstate.stack[-1]
                     stack_1 = state.mstate.stack[-2]
