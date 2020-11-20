@@ -12,16 +12,12 @@ log = logging.getLogger(__name__)
 def parse_cli_args() -> ContractLoaderFactory:
     program_name = 'SC3A - Smart Contract Advanced Administrator Analyzer'
     parser = ArgumentParser(description=program_name)
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
-                        help='print detailed output')
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
 
     input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument('-b', '--bin', metavar='PATH', type=Text, dest='bin_path',
-                             help='path to file containing EVM bytecode')
-    input_group.add_argument('-s', '--sol', metavar='PATH', type=Text, dest='sol_path',
-                             help='path to solidity contract')
-    input_group.add_argument('-a', '--address', metavar='ADDRESS', type=Text, dest='address',
-                             help='contract address to analyze')
+    input_group.add_argument('-b', '--bin', metavar='PATH', type=Text, dest='bin_path', help='path to file containing EVM bytecode')
+    input_group.add_argument('-s', '--sol', metavar='PATH', type=Text, dest='sol_path', help='path to solidity contract')
+    input_group.add_argument('-a', '--address', metavar='ADDRESS', type=Text, dest='address', help='contract address to analyze')
 
     networking_group = parser.add_argument_group('networking arguments')
     networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='web3 HTTP(s) provider URL')
