@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class SingleOwnerStrategy(AnalysisStrategy):
 
-    def _analyze(self, nodes: Dict[int, Node]) -> Optional[Set[Text]]:
+    def _analyze(self, nodes: Dict[int, Node]) -> Optional[Set[int]]:
         log.info('Analyzing nodes of symbolic execution')
         potential_storage_addresses = set()
         for nidx, node in nodes.items():
@@ -51,7 +51,7 @@ class SingleOwnerStrategy(AnalysisStrategy):
                     proposition_1.append(stack_1 != caller)
                     # If either proposition is unsat we keep the storage address
                     if self._is_unsat(proposition_0) or self._is_unsat(proposition_1):
-                        potential_storage_addresses.add(storage_address)
+                        potential_storage_addresses.add(storage_address.value)
         log.info(('Found %i potential storage addresses that might '
                   'contain administrator accounts'), len(potential_storage_addresses))
         return potential_storage_addresses

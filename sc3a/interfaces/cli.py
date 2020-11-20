@@ -48,4 +48,4 @@ def parse_cli_args() -> ContractLoaderFactory:
 
 def main():
     strategy = parse_cli_args()
-    log.info('SingleOwner results: %s', str(strategy.execute()))
+    log.info('Results: %s', str(strategy.execute()))

@@ -3,7 +3,7 @@ import re
 import time
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Set, Text
+from typing import Dict, List, Optional, Set, Text, Union
 
 from sc3a.loader.contract_loader import FileLoader, Web3Loader
 from sc3a.util.logic import xor
@@ -53,7 +53,7 @@ class AnalysisStrategy(ABC):
         log.debug('Creating %s instance from Web3 loader.', cls.__name__)
         return cls(svm.LaserEVM(web3_loader.dyn_loader), target_address=web3_loader.address, dyn_loader=web3_loader.dyn_loader)
 
-    def execute(self) -> Optional[List[Text]]:
+    def execute(self) -> Optional[Union[List[Text], List[int]]]:
         """
         Wrapper method for executing the analysis strategy.
         Symbolic execution is performed before the execution of the internal analysis method (*_analyze(...)*).
@@ -64,20 +64,24 @@ class AnalysisStrategy(ABC):
         start_time = time.time()
         if self.creation_code:
             self.laser.sym_exec(creation_code=self.creation_code, contract_name="Unknown")
-        elif self.target_address:
+        elif self.target_address and self.dyn_loader:
             world_state = WorldState()
             world_state.accounts_exist_or_load(self.target_address, self.dyn_loader)
             self.laser.sym_exec(world_state=world_state, target_address=int(self.target_address, 16))
         else:
-            raise AttributeError(('Symbolic execution cannot run without either the creation bytecode or the target address'))
+            raise AttributeError('Symbolic execution cannot run without either the creation bytecode or a dynamic loader')
         end_time = time.time()
-        log.info('Finished symbolic execution in %.2f seconds.', end_time - start_time)
+        log.info('Symbolic execution finished in %.2f seconds.', end_time - start_time)
         log.info('Executing analysis strategy.')
         storage_addresses = self._analyze(self.laser.nodes)
-        return list(storage_addresses)
+        log.debug('Found the following storage addresses: %s', str(storage_addresses))
+        if self.target_address and self.dyn_loader:
+            return [self.dyn_loader.read_storage(self.target_address, i) for i in storage_addresses]
+        else:
+            return list(storage_addresses)
 
     @abstractmethod
-    def _analyze(self, nodes: Dict[int, Node]) -> Optional[Set[Text]]:
+    def _analyze(self, nodes: Dict[int, Node]) -> Optional[Set[int]]:
         """
         Actual implementation of the analysis strategy. Override this when creating a new AnalysisStrategy subclass.
         """
