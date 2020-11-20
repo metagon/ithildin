@@ -2,7 +2,6 @@ import logging
 from typing import Text
 
 from argparse import ArgumentParser
-from mythril.ethereum.evmcontract import EVMContract
 
 from sc3a.analysis.strategies.single_owner import SingleOwnerStrategy
 from sc3a.loader.contract_loader_factory import get_factory, ContractLoaderFactory, LoaderFactoryType
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_cli_args() -> ContractLoaderFactory:
     program_name = 'SC3A - Smart Contract Advanced Administrator Analyzer'
     parser = ArgumentParser(description=program_name)
-    parser.add_argument('-v', action='store_true', dest='verbose',
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                         help='print detailed output')
 
     input_group = parser.add_mutually_exclusive_group(required=True)
@@ -25,7 +24,7 @@ def parse_cli_args() -> ContractLoaderFactory:
                              help='contract address to analyze')
 
     networking_group = parser.add_argument_group('networking arguments')
-    networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='web3 provider')
+    networking_group.add_argument('--web3', metavar="WEB3", type=Text, dest='web3', help='web3 HTTP(s) provider URL')
 
     args = parser.parse_args()
 
@@ -34,19 +33,23 @@ def parse_cli_args() -> ContractLoaderFactory:
         for logger in [logging.getLogger(name) for name in logging.root.manager.loggerDict]:
             logger.setLevel(logging.DEBUG)
 
-    # Get the contract loader factory based on the specified options
+    # Get the contract loader factory and strategy based on the specified options
+    # TODO: Needs to be improved, the latest when the strategy loader is introduced
     if args.bin_path:
         factory = get_factory(LoaderFactoryType.BINARY, path=args.bin_path)
+        strategy = SingleOwnerStrategy.from_file_loader(factory.create())
     elif args.sol_path:
         factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path)
+        strategy = SingleOwnerStrategy.from_file_loader(factory.create())
+    elif args.address:
+        factory = get_factory(LoaderFactoryType.WEB3, address=args.address, web3=args.web3)
+        strategy = SingleOwnerStrategy.from_web3_loader(factory.create())
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')
 
-    return factory
+    return strategy
 
 
-def main(factory: ContractLoaderFactory):
-    loader = factory.create()
-    contract = loader.contract()
-    strategy = SingleOwnerStrategy()
-    log.info('SingleOwner results: %s', str(strategy.execute(contract)))
+def main():
+    strategy = parse_cli_args()
+    log.info('SingleOwner results: %s', str(strategy.execute()))

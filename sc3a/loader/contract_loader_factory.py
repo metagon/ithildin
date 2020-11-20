@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, Set, Text
+from typing import Set, Text, Union
 
-from mythril.ethereum.evmcontract import EVMContract
-from sc3a.loader.contract_loader import ContractLoader, BinaryLoader, SolidityLoader
+from sc3a.loader.contract_loader import FileLoader, BinaryLoader, SolidityLoader, Web3Loader
 
 
 class LoaderFactoryType(Enum):
     BINARY = 1
     SOLIDITY = 2
+    WEB3 = 3
 
 
 class ContractLoaderFactory(ABC):
@@ -25,13 +25,13 @@ class ContractLoaderFactory(ABC):
         pass
 
     @abstractmethod
-    def create(self) -> ContractLoader:
+    def create(self) -> Union[FileLoader, Web3Loader]:
         pass
 
 
 class BinaryLoaderFactory(ContractLoaderFactory):
 
-    def create(self) -> ContractLoader:
+    def create(self) -> FileLoader:
         return BinaryLoader(self._options.get('path'))
 
     @property
@@ -41,7 +41,7 @@ class BinaryLoaderFactory(ContractLoaderFactory):
 
 class SolidityLoaderFactory(ContractLoaderFactory):
 
-    def create(self) -> ContractLoader:
+    def create(self) -> FileLoader:
         return SolidityLoader(self._options.get('path'))
 
     @property
@@ -49,10 +49,21 @@ class SolidityLoaderFactory(ContractLoaderFactory):
         return {'path'}
 
 
+class Web3LoaderFactory(ContractLoaderFactory):
+
+    def create(self) -> Web3Loader:
+        return Web3Loader(self._options.get('address'), self._options.get('web3'))
+
+    @property
+    def _required_options(self) -> Set[Text]:
+        return {'address', 'web3'}
+
+
 def get_factory(loader_type: LoaderFactoryType, **options) -> ContractLoaderFactory:
     switcher = {
         LoaderFactoryType.BINARY:   BinaryLoaderFactory,
-        LoaderFactoryType.SOLIDITY: SolidityLoaderFactory
+        LoaderFactoryType.SOLIDITY: SolidityLoaderFactory,
+        LoaderFactoryType.WEB3:     Web3LoaderFactory
     }
     if loader_type not in switcher:
         raise NotImplementedError('This factory has not been implemented yet')
