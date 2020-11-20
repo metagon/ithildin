@@ -25,12 +25,12 @@ SC3A - Smart Contract Advanced Administrator Analyzer
 
 optional arguments:
   -h, --help            show this help message and exit
-  -v                    print detailed output
+  -v, --verbose         print detailed output
   -b PATH, --bin PATH   path to file containing EVM bytecode
   -s PATH, --sol PATH   path to solidity contract
   -a ADDRESS, --address ADDRESS
                         contract address to analyze
 
 networking arguments:
-  --rpc RPC             web3 provider
+  --rpc RPC             web3 HTTP(s) provider URL
 ```
