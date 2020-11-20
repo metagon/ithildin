@@ -28,7 +28,8 @@ class AnalysisStrategy(ABC):
     When creating a new analysis strategy by subclassing this base class, override the *_analyze(...)* method.
     """
 
-    def __init__(self, laser: svm.LaserEVM,
+    def __init__(self,
+                 laser: svm.LaserEVM,
                  creation_code: Optional[Text] = None,
                  target_address: Optional[Text] = None,
                  dyn_loader: Optional[DynLoader] = None):
@@ -68,8 +69,7 @@ class AnalysisStrategy(ABC):
             world_state.accounts_exist_or_load(self.target_address, self.dyn_loader)
             self.laser.sym_exec(world_state=world_state, target_address=int(self.target_address, 16))
         else:
-            raise AttributeError(('Symbolic execution cannot run without either the creation bytecode '
-                                  'or the target address'))
+            raise AttributeError(('Symbolic execution cannot run without either the creation bytecode or the target address'))
         end_time = time.time()
         log.info('Finished symbolic execution in %.2f seconds.', end_time - start_time)
         log.info('Executing analysis strategy.')
@@ -101,9 +101,7 @@ class AnalysisStrategy(ABC):
             log.debug('Violation found...')
             log.debug('### BEGIN DECLARATIONS ###')
             for d in model.decls():
-                log.debug("<DECL %s = %s>",
-                          d.name(),
-                          re.sub(r'\s{2,}', ' ', str(model[d]).replace('\n', ' ')))
+                log.debug("<DECL %s = %s>", d.name(), re.sub(r'\s{2,}', ' ', str(model[d]).replace('\n', ' ')))
             log.debug('### END DECLARATIONS ###')
             return False
         except UnsatError:
