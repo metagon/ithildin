@@ -24,7 +24,7 @@ def parse_cli_args() -> ContractLoaderFactory:
                              help='contract address to analyze')
 
     networking_group = parser.add_argument_group('networking arguments')
-    networking_group.add_argument('--web3', metavar="WEB3", type=Text, dest='web3', help='web3 HTTP(s) provider URL')
+    networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='web3 HTTP(s) provider URL')
 
     args = parser.parse_args()
 
@@ -42,7 +42,7 @@ def parse_cli_args() -> ContractLoaderFactory:
         factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path)
         strategy = SingleOwnerStrategy.from_file_loader(factory.create())
     elif args.address:
-        factory = get_factory(LoaderFactoryType.WEB3, address=args.address, web3=args.web3)
+        factory = get_factory(LoaderFactoryType.WEB3, address=args.address, rpc=args.rpc)
         strategy = SingleOwnerStrategy.from_web3_loader(factory.create())
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')

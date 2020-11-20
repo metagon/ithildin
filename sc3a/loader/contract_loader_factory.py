@@ -52,11 +52,11 @@ class SolidityLoaderFactory(ContractLoaderFactory):
 class Web3LoaderFactory(ContractLoaderFactory):
 
     def create(self) -> Web3Loader:
-        return Web3Loader(self._options.get('address'), self._options.get('web3'))
+        return Web3Loader(self._options.get('address'), self._options.get('rpc'))
 
     @property
     def _required_options(self) -> Set[Text]:
-        return {'address', 'web3'}
+        return {'address', 'rpc'}
 
 
 def get_factory(loader_type: LoaderFactoryType, **options) -> ContractLoaderFactory:
