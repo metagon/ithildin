@@ -1,7 +1,7 @@
 import logging
 
 from mythril.laser.ethereum.cfg import Node
-from typing import Dict, Optional, Set, Text
+from typing import Dict, Optional, Set
 
 from sc3a.analysis.base import AnalysisStrategy
 
