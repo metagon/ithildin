@@ -29,7 +29,6 @@ class AnalysisStrategy(ABC):
     """
 
     def __init__(self,
-                 laser: svm.LaserEVM,
                  creation_code: Optional[Text] = None,
                  target_address: Optional[Text] = None,
                  dyn_loader: Optional[DynLoader] = None):
@@ -37,7 +36,10 @@ class AnalysisStrategy(ABC):
         existing_mode = target_address is not None and dyn_loader is not None
         assert xor(create_mode, existing_mode), ('Either the contract\'s creation_code or the target_address '
                                                  'together with a dyn_loader instance have to be provided.')
-        self.laser = laser
+        if existing_mode:
+            self.laser = svm.LaserEVM(dyn_loader)
+        else:
+            self.laser = svm.LaserEVM()
         self.creation_code = creation_code
         self.target_address = target_address
         self.dyn_loader = dyn_loader
@@ -46,12 +48,12 @@ class AnalysisStrategy(ABC):
     def from_file_loader(cls, file_loader: FileLoader):
         log.debug('Creating %s instance from file loader.', cls.__name__)
         contract = file_loader.contract()
-        return cls(svm.LaserEVM(), creation_code=contract.creation_disassembly.bytecode)
+        return cls(creation_code=contract.creation_disassembly.bytecode)
 
     @classmethod
     def from_web3_loader(cls, web3_loader: Web3Loader):
         log.debug('Creating %s instance from Web3 loader.', cls.__name__)
-        return cls(svm.LaserEVM(web3_loader.dyn_loader), target_address=web3_loader.address, dyn_loader=web3_loader.dyn_loader)
+        return cls(target_address=web3_loader.address, dyn_loader=web3_loader.dyn_loader)
 
     def execute(self) -> Optional[Union[List[Text], List[int]]]:
         """
