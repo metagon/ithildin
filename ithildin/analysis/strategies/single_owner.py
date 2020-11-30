@@ -3,7 +3,7 @@ import logging
 from mythril.laser.ethereum.cfg import Node
 from typing import Dict, Optional, Set
 
-from sc3a.analysis.base import AnalysisStrategy
+from ithildin.analysis.base import AnalysisStrategy
 
 log = logging.getLogger(__name__)
 

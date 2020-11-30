@@ -5,8 +5,8 @@ import time
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Set, Text, Union
 
-from sc3a.loader.contract_loader import FileLoader, Web3Loader
-from sc3a.util.logic import xor
+from ithildin.loader.contract_loader import FileLoader, Web3Loader
+from ithildin.util.logic import xor
 
 from mythril.exceptions import UnsatError
 from mythril.laser.ethereum import svm

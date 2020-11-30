@@ -1,7 +1,7 @@
 import logging
 import re
 
-from sc3a.exception import ValidationError
+from ithildin.exception import ValidationError
 
 from abc import ABC, abstractmethod
 from typing import Optional, Text

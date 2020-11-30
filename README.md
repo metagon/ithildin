@@ -1,4 +1,6 @@
-# Smart Contract Advanced Administrator Analyzer (SC3A)
+# Ithildin
+
+Smart Contract Administrator Analyzer based on Mythril
 
 ## Requirements
 
@@ -12,7 +14,7 @@ Install all the requirements inside a virtual environment or globally.
 ### Installing Mythril Inside a Virtual Environment (Recommended)
 
 ```bash
-$ cd <sc3a-root-dir>
+$ cd <ithildin-root-dir>
 $ python3 -m venv .venv
 $ source .venv/bin/activate
 $ pip3 install -r requirements.txt
@@ -21,7 +23,7 @@ $ pip3 install -r requirements.txt
 ### Installing Mythril Globally
 
 Install the latest version using the following command.
-Note that SC3A might not work in case breaking changes have been introduced to the library.
+Note that ithildin might not work in case breaking changes have been introduced to the library.
 
 ```bash
 $ pip3 install mythril
@@ -38,7 +40,7 @@ $ pip3 install -r requirements.txt
 Since no install script is present yet, you'll need to navigate to the project's root directory for now.
 
 ```bash
-$ cd <sc3a-root-dir>
+$ cd <ithildin-root-dir>
 ```
 
 ### Analyzing Solidity Contracts

@@ -3,15 +3,15 @@ from typing import Text
 
 from argparse import ArgumentParser
 
-from sc3a.analysis.base import AnalysisStrategy
-from sc3a.analysis.strategies.single_owner import SingleOwnerStrategy
-from sc3a.loader.contract_loader_factory import get_factory, LoaderFactoryType
+from ithildin.analysis.base import AnalysisStrategy
+from ithildin.analysis.strategies.single_owner import SingleOwnerStrategy
+from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
 
 log = logging.getLogger(__name__)
 
 
 def parse_cli_args() -> AnalysisStrategy:
-    program_name = 'SC3A - Smart Contract Advanced Administrator Analyzer'
+    program_name = 'Ithildin - A smart contract administrator analyzer based on Mythril'
     parser = ArgumentParser(description=program_name)
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
 

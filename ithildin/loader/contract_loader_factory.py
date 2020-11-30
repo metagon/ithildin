@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Set, Text, Union
 
-from sc3a.loader.contract_loader import FileLoader, BinaryLoader, SolidityLoader, Web3Loader
+from ithildin.loader.contract_loader import FileLoader, BinaryLoader, SolidityLoader, Web3Loader
 
 
 class LoaderFactoryType(Enum):
