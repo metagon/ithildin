@@ -46,7 +46,7 @@ $ cd <ithildin-root-dir>
 ### Analyzing Solidity Contracts
 
 ```bash
-$ ./sca --sol Example.sol
+$ ./ithil --sol Example.sol
 ```
 
 ### Analyzing Bytecode Files
@@ -56,7 +56,7 @@ Contracts that have been deployed on the chain have that part removed post-const
 If you want to analyze the bytecode of a deployed contract use the next option.
 
 ```bash
-$ ./sca --bin Example.bin
+$ ./ithil --bin Example.bin
 ```
 
 ### Analyzing Deployed Contracts
@@ -65,5 +65,5 @@ The following command analyzes the contract bytecode at the given target address
 You'll have to supply the RPC endpoint using the `--rpc` argument, unless you are using geth, in which case the default endpoint `http://localhost:8545` is used.
 
 ```bash
-$ ./sca --address 0x3D8e04CC42F61624e1B193C51f27D373A9244D9b --rpc localhost:7545
+$ ./ithil --address 0x3D8e04CC42F61624e1B193C51f27D373A9244D9b --rpc localhost:7545
 ```
