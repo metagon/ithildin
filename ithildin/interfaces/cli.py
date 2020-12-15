@@ -4,7 +4,7 @@ from typing import Text
 from argparse import ArgumentParser
 
 from ithildin.analysis.base import AnalysisStrategy
-from ithildin.analysis.strategies.single_owner import SingleOwnerStrategy
+from ithildin.analysis.strategies.ownership import OwnershipStrategy
 from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
 
 log = logging.getLogger(__name__)
@@ -34,13 +34,13 @@ def parse_cli_args() -> AnalysisStrategy:
     # TODO: Needs to be improved, the latest when the strategy loader is introduced
     if args.bin_path:
         factory = get_factory(LoaderFactoryType.BINARY, path=args.bin_path)
-        strategy = SingleOwnerStrategy.from_file_loader(factory.create())
+        strategy = OwnershipStrategy.from_file_loader(factory.create())
     elif args.sol_path:
         factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path)
-        strategy = SingleOwnerStrategy.from_file_loader(factory.create())
+        strategy = OwnershipStrategy.from_file_loader(factory.create())
     elif args.address:
         factory = get_factory(LoaderFactoryType.WEB3, address=args.address, rpc=args.rpc)
-        strategy = SingleOwnerStrategy.from_web3_loader(factory.create())
+        strategy = OwnershipStrategy.from_web3_loader(factory.create())
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')
 

@@ -8,7 +8,7 @@ from ithildin.analysis.base import AnalysisStrategy
 log = logging.getLogger(__name__)
 
 
-class SingleOwnerStrategy(AnalysisStrategy):
+class OwnershipStrategy(AnalysisStrategy):
 
     def _analyze(self, nodes: Dict[int, Node]) -> Optional[Set[int]]:
         log.info('Analyzing nodes of symbolic execution')
