@@ -10,7 +10,7 @@ from ithildin.util.logic import xor
 
 from mythril.exceptions import UnsatError
 from mythril.laser.ethereum import svm
-from mythril.laser.ethereum.cfg import Constraints, Node
+from mythril.laser.ethereum.cfg import Constraints, Edge, Node
 from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.support.loader import DynLoader
 from mythril.support.model import get_model
@@ -75,7 +75,7 @@ class AnalysisStrategy(ABC):
         end_time = time.time()
         log.info('Symbolic execution finished in %.2f seconds.', end_time - start_time)
         log.info('Executing analysis strategy.')
-        storage_addresses = self._analyze(self.laser.nodes)
+        storage_addresses = self._analyze()
         log.debug('Found the following storage addresses: %s', str(storage_addresses))
         if self.target_address and self.dyn_loader:
             return [self.dyn_loader.read_storage(self.target_address, i) for i in storage_addresses]
@@ -83,7 +83,7 @@ class AnalysisStrategy(ABC):
             return list(storage_addresses)
 
     @abstractmethod
-    def _analyze(self, nodes: Dict[int, Node]) -> Optional[Set[int]]:
+    def _analyze(self) -> Optional[Set[int]]:
         """
         Actual implementation of the analysis strategy. Override this when creating a new AnalysisStrategy subclass.
         """
@@ -112,3 +112,33 @@ class AnalysisStrategy(ABC):
             return False
         except UnsatError:
             return True
+
+    def _get_outgoing_edges(self, node_uid: int) -> List[Edge]:
+        """
+        Helper function that returns all outgoing edges from the given node.
+
+        Parameters
+        ----------
+        node_uid: int
+            The unique ID of the node in question.
+        """
+        return [e for e in self.laser.edges if e.node_from == node_uid]
+
+    def _opcode_follows(self, node_uid: int, opcode: Text) -> bool:
+        """
+        Helper function to check whether an *opcode* is contained in a node that immediately
+        follows the node with UID *node_uid*.
+
+        Parameters
+        ----------
+        node_uid: int
+            The unique ID of the node in the symbolic graph.
+        opcode: Text
+            The name of the opcode to look for (e.g. 'EQ', 'REVERT').
+        """
+        outgoing_edges = self._get_outgoing_edges(node_uid)
+        for edge in outgoing_edges:
+            for state in self.laser.nodes[edge.node_to].states:
+                if state.instruction['opcode'] == opcode:
+                    return True
+        return False
