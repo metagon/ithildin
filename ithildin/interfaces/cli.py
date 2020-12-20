@@ -1,19 +1,20 @@
 import logging
+import time
 from typing import Text
 
 from argparse import ArgumentParser
 
-from ithildin.analysis.base import AnalysisStrategy
-from ithildin.analysis.strategies.ownership import OwnershipStrategy
+from ithildin.analysis.factory import AnalysisStrategyFactory
+from ithildin.analysis.strategies import StrategyType
 from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
+from ithildin.model.report import Report
 
-log = logging.getLogger(__name__)
 
-
-def parse_cli_args() -> AnalysisStrategy:
+def parse_cli_args() -> AnalysisStrategyFactory:
     program_name = 'Ithildin - A smart contract administrator analyzer based on Mythril'
     parser = ArgumentParser(description=program_name)
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
+    parser.add_argument('-j', '--json', action='store_true', dest='as_json', help='print report as JSON to standard output')
 
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument('-b', '--bin', metavar='PATH', type=Text, dest='bin_path', help='path to file containing EVM bytecode')
@@ -26,27 +27,32 @@ def parse_cli_args() -> AnalysisStrategy:
     args = parser.parse_args()
 
     # Set logging level to DEBUG for all logers if verbose option was specified
-    if args.verbose:
+    # Disable logging propagation in case the *--json* flag was specified
+    if args.verbose or args.as_json:
         for logger in [logging.getLogger(name) for name in logging.root.manager.loggerDict]:
-            logger.setLevel(logging.DEBUG)
+            if args.verbose:
+                logger.setLevel(logging.DEBUG)
+            if args.as_json:
+                logger.propagate = False
 
-    # Get the contract loader factory and strategy based on the specified options
-    # TODO: Needs to be improved, the latest when the strategy loader is introduced
+    # Get the contract loader factory based on the specified options
     if args.bin_path:
-        factory = get_factory(LoaderFactoryType.BINARY, path=args.bin_path)
-        strategy = OwnershipStrategy.from_file_loader(factory.create())
+        contract_loader_factory = get_factory(LoaderFactoryType.BINARY, path=args.bin_path)
     elif args.sol_path:
-        factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path)
-        strategy = OwnershipStrategy.from_file_loader(factory.create())
+        contract_loader_factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path)
     elif args.address:
-        factory = get_factory(LoaderFactoryType.WEB3, address=args.address, rpc=args.rpc)
-        strategy = OwnershipStrategy.from_web3_loader(factory.create())
+        contract_loader_factory = get_factory(LoaderFactoryType.WEB3, address=args.address, rpc=args.rpc)
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')
 
-    return strategy
+    return AnalysisStrategyFactory(contract_loader_factory.create())
 
 
 def main():
-    strategy = parse_cli_args()
-    log.info('Results: %s', str(strategy.execute()))
+    report = Report(start_time=time.time())
+    strategy_factory = parse_cli_args()
+    for strategy_type in StrategyType:
+        report.add_item(strategy_factory.create(strategy_type).execute())
+    report.end_time = time.time()
+    # TODO: Replace with output handler
+    print(report.to_json(pretty=True))

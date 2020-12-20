@@ -16,7 +16,7 @@ class ContractLoaderFactory(ABC):
     def __init__(self, **options) -> None:
         missing_options = self._required_options - options.keys()
         if len(missing_options) > 0:
-            raise KeyError('Missing option(s): %s' % str(missing_options))
+            raise AttributeError('Missing option(s): %s' % str(missing_options))
         self._options = options
 
     @property

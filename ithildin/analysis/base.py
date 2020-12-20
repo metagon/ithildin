@@ -3,29 +3,26 @@ import re
 import time
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Set, Text, Union
+from typing import List, Optional, Text
 
-from ithildin.loader.contract_loader import FileLoader, Web3Loader
 from ithildin.util.logic import xor
+from ithildin.model.report import ReportItem
 
 from mythril.exceptions import UnsatError
 from mythril.laser.ethereum import svm
-from mythril.laser.ethereum.cfg import Constraints, Edge, Node
+from mythril.laser.ethereum.cfg import Constraints, Edge
 from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.support.loader import DynLoader
 from mythril.support.model import get_model
 
 log = logging.getLogger(__name__)
 
-
 class AnalysisStrategy(ABC):
     """
-    Base class for contract analysis strategies. Subclasses should be instantiated using one of the classmethods:
+    Base class for contract analysis strategies. Subclasses can be instantiated by using the AnalysisStrategyFactory
+    from the module \'ithildin.analysis.factory\'.
 
-    * from_file_loader
-    * from_web3_loader
-
-    When creating a new analysis strategy by subclassing this base class, override the *_analyze(...)* method.
+    When creating a new analysis strategy by subclassing this base class, override the *_analyze()* function.
     """
 
     def __init__(self,
@@ -44,18 +41,7 @@ class AnalysisStrategy(ABC):
         self.target_address = target_address
         self.dyn_loader = dyn_loader
 
-    @classmethod
-    def from_file_loader(cls, file_loader: FileLoader):
-        log.debug('Creating %s instance from file loader.', cls.__name__)
-        contract = file_loader.contract()
-        return cls(creation_code=contract.creation_disassembly.bytecode)
-
-    @classmethod
-    def from_web3_loader(cls, web3_loader: Web3Loader):
-        log.debug('Creating %s instance from Web3 loader.', cls.__name__)
-        return cls(target_address=web3_loader.address, dyn_loader=web3_loader.dyn_loader)
-
-    def execute(self) -> Optional[Union[List[Text], List[int]]]:
+    def execute(self) -> Optional[ReportItem]:
         """
         Wrapper method for executing the analysis strategy.
         Symbolic execution is performed before the execution of the internal analysis method (*_analyze(...)*).
@@ -74,18 +60,20 @@ class AnalysisStrategy(ABC):
             raise AttributeError('Symbolic execution cannot run without either the creation bytecode or a dynamic loader')
         end_time = time.time()
         log.info('Symbolic execution finished in %.2f seconds.', end_time - start_time)
-        log.info('Executing analysis strategy.')
-        storage_addresses = self._analyze()
-        log.debug('Found the following storage addresses: %s', str(storage_addresses))
-        if self.target_address and self.dyn_loader:
-            return [self.dyn_loader.read_storage(self.target_address, i) for i in storage_addresses]
-        else:
-            return list(storage_addresses)
+        log.info('Executing analysis strategy \"%s\".', type(self).__name__)
+        report_item = self._analyze()
+        if report_item is not None and self.target_address and self.dyn_loader:
+            for finding in report_item.findings:
+                if finding.storage_address is not None:
+                    finding.storage_content = self.dyn_loader.read_storage(self.target_address, finding.storage_address)
+        return report_item
 
     @abstractmethod
-    def _analyze(self) -> Optional[Set[int]]:
+    def _analyze(self) -> Optional[ReportItem]:
         """
         Actual implementation of the analysis strategy. Override this when creating a new AnalysisStrategy subclass.
+
+        Nodes can be accessed through *self.laser.nodes* and edges through *self.laser.edges*.
         """
         pass
 
@@ -132,7 +120,7 @@ class AnalysisStrategy(ABC):
         Parameters
         ----------
         node_uid: int
-            The unique ID of the node in the symbolic graph.
+            The unique ID of the node in the call graph.
         opcode: Text
             The name of the opcode to look for (e.g. 'EQ', 'REVERT').
         """
