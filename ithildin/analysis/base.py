@@ -1,17 +1,15 @@
 import logging
 import re
-import time
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Text
 
 from ithildin.util.logic import xor
 from ithildin.model.report import ReportItem
+from ithildin.support.laser_db import LaserDB
 
 from mythril.exceptions import UnsatError
-from mythril.laser.ethereum import svm
 from mythril.laser.ethereum.cfg import Constraints, Edge
-from mythril.laser.ethereum.state.world_state import WorldState
 from mythril.support.loader import DynLoader
 from mythril.support.model import get_model
 
@@ -33,13 +31,10 @@ class AnalysisStrategy(ABC):
         existing_mode = target_address is not None and dyn_loader is not None
         assert xor(create_mode, existing_mode), ('Either the contract\'s creation_code or the target_address '
                                                  'together with a dyn_loader instance have to be provided.')
-        if existing_mode:
-            self.laser = svm.LaserEVM(dyn_loader)
-        else:
-            self.laser = svm.LaserEVM()
         self.creation_code = creation_code
         self.target_address = target_address
         self.dyn_loader = dyn_loader
+        self._laser_db = LaserDB() # Singleton
 
     def execute(self) -> Optional[ReportItem]:
         """
@@ -48,19 +43,8 @@ class AnalysisStrategy(ABC):
 
         This is what should be called by the client, and the actual implementation should be written in *_analyze(...)*.
         """
-        log.info('Running symbolic execution...')
-        start_time = time.time()
-        if self.creation_code:
-            self.laser.sym_exec(creation_code=self.creation_code, contract_name="Unknown")
-        elif self.target_address and self.dyn_loader:
-            world_state = WorldState()
-            world_state.accounts_exist_or_load(self.target_address, self.dyn_loader)
-            self.laser.sym_exec(world_state=world_state, target_address=int(self.target_address, 16))
-        else:
-            raise AttributeError('Symbolic execution cannot run without either the creation bytecode or a dynamic loader')
-        end_time = time.time()
-        log.info('Symbolic execution finished in %.2f seconds.', end_time - start_time)
-        log.info('Executing analysis strategy \"%s\".', type(self).__name__)
+        self.laser = self._laser_db.sym_exec(self.creation_code, self.target_address, self.dyn_loader)
+        log.info('Executing analysis strategy \"%s\"', type(self).__name__)
         report_item = self._analyze()
         if report_item is not None and self.target_address and self.dyn_loader:
             for finding in report_item.findings:
