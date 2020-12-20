@@ -66,7 +66,8 @@ class Report:
         self.items = []
 
     def add_item(self, item: ReportItem) -> None:
-        self.items.append(item)
+        if item is not None:
+            self.items.append(item)
 
     def add_all(self, items: List[ReportItem]) -> None:
         self.items.extend(items)
@@ -86,6 +87,6 @@ class Report:
             '<Report '
             'start_time={0.start_time} '
             'end_time={0.end_time} '
-            'items={0.items}'
+            'reports={0.items}'
             '>'
         ).format(self)

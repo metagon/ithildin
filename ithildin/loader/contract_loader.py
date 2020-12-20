@@ -39,6 +39,7 @@ class BinaryLoader(FileLoader):
 class SolidityLoader(FileLoader):
 
     def contract(self) -> EVMContract:
+        # TODO: Allow user to specify path to solc binary
         return SolidityContract(self._file_path)
 
 

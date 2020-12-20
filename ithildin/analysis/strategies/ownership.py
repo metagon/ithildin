@@ -7,14 +7,14 @@ from ithildin.model.report import Finding, ReportItem
 
 log = logging.getLogger(__name__)
 
+PATTERN_NAME = 'OWNERSHIP'
+REPORT_TITLE = 'Ownership'
+REPORT_DESCRIPTION = ('This pattern aims at restricting functions to specific addresses. For example '
+                      'the owner of the contract is specified in the constructor and only that account '
+                      'is allowed to access a function and change the contract\'s state.')
+
 
 class Ownership(AnalysisStrategy):
-
-    PATTERN_NAME = 'OWNERSHIP'
-    REPORT_TITLE = 'Ownership'
-    REPORT_DESCRIPTION = ('This pattern aims at restricting functions to specific addresses. For example '
-                          'the owner of the contract is specified in the constructor and only that account '
-                          'is allowed to access a function and change the contract\'s state.')
 
     def _analyze(self) -> Optional[ReportItem]:
         potential_findings = {}
@@ -59,8 +59,9 @@ class Ownership(AnalysisStrategy):
                         log.debug('Found REVERT instruction in one of the immediately following nodes')
                         potential_findings[node.function_name] = storage_address.value
                         break
-        log.info(('Found %i potential storage addresses that might contain owner accounts'), len(potential_findings))
-        report_item = ReportItem(self.REPORT_TITLE, self.REPORT_DESCRIPTION, self.PATTERN_NAME)
+        if len(potential_findings) == 0:
+            return None
+        report_item = ReportItem(REPORT_TITLE, REPORT_DESCRIPTION, PATTERN_NAME)
         for function_name, storage_address in potential_findings.items():
             report_item.add_finding(Finding(function_name, storage_address))
         return report_item
