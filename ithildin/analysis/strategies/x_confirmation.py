@@ -37,9 +37,7 @@ class XConfirmation(AnalysisStrategy):
                     log.debug('Function \'%s\' is restricted by block count', node.function_name)
                     restricted_functions.add(node.function_name)
                     break
-        if len(restricted_functions) == 0:
-            return None
         report_item = ReportItem(REPORT_TITLE, REPORT_DESCRIPTION, PATTERN_NAME)
         for function in restricted_functions:
             report_item.add_result(Result(function))
-        return report_item
+        return report_item if len(report_item.results) > 0 else None

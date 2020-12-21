@@ -59,9 +59,7 @@ class Ownership(AnalysisStrategy):
                         log.debug('Found REVERT instruction in one of the immediately following nodes')
                         potential_findings[node.function_name] = storage_address.value
                         break
-        if len(potential_findings) == 0:
-            return None
         report_item = ReportItem(REPORT_TITLE, REPORT_DESCRIPTION, PATTERN_NAME)
         for function_name, storage_address in potential_findings.items():
             report_item.add_result(Result(function_name, storage_address))
-        return report_item
+        return report_item if len(report_item.results) > 0 else None
