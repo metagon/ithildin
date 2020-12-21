@@ -47,9 +47,9 @@ class AnalysisStrategy(ABC):
         log.info('Executing analysis strategy \"%s\"', type(self).__name__)
         report_item = self._analyze()
         if report_item is not None and self.target_address and self.dyn_loader:
-            for finding in report_item.findings:
-                if finding.storage_address is not None:
-                    finding.storage_content = self.dyn_loader.read_storage(self.target_address, finding.storage_address)
+            for result in report_item.results:
+                if result.storage_address is not None:
+                    result.storage_content = self.dyn_loader.read_storage(self.target_address, result.storage_address)
         return report_item
 
     @abstractmethod

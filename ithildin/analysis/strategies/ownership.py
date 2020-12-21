@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 from ithildin.analysis.base import AnalysisStrategy
-from ithildin.model.report import Finding, ReportItem
+from ithildin.model.report import Result, ReportItem
 
 log = logging.getLogger(__name__)
 
@@ -63,5 +63,5 @@ class Ownership(AnalysisStrategy):
             return None
         report_item = ReportItem(REPORT_TITLE, REPORT_DESCRIPTION, PATTERN_NAME)
         for function_name, storage_address in potential_findings.items():
-            report_item.add_finding(Finding(function_name, storage_address))
+            report_item.add_result(Result(function_name, storage_address))
         return report_item

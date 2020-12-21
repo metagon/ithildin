@@ -52,7 +52,7 @@ def main():
     report = Report(start_time=time.time())
     strategy_factory = parse_cli_args()
     for strategy_type in StrategyType:
-        report.add_item(strategy_factory.create(strategy_type).execute())
+        report.add_report(strategy_factory.create(strategy_type).execute())
     report.end_time = time.time()
     # TODO: Replace with output handler
     print(report.to_json(pretty=True))

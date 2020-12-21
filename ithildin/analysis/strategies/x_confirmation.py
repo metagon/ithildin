@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from ithildin.analysis.base import AnalysisStrategy
-from ithildin.model.report import Finding, ReportItem
+from ithildin.model.report import Result, ReportItem
 
 log = logging.getLogger(__name__)
 
@@ -41,5 +41,5 @@ class XConfirmation(AnalysisStrategy):
             return None
         report_item = ReportItem(REPORT_TITLE, REPORT_DESCRIPTION, PATTERN_NAME)
         for function in restricted_functions:
-            report_item.add_finding(Finding(function))
+            report_item.add_result(Result(function))
         return report_item

@@ -3,7 +3,7 @@ import json
 from typing import Dict, List, Optional, Text
 
 
-class Finding:
+class Result:
 
     def __init__(self, function_name: Text, storage_address: Optional[int] = None, storage_content: Optional[Text] = None) -> None:
         self.function_name = function_name
@@ -17,7 +17,7 @@ class Finding:
         if self.storage_content is not None:
             as_dict['storageContent'] = self.storage_content
         return as_dict
-    
+
     def __repr__(self):
         return (
             '<Finding '
@@ -34,49 +34,49 @@ class ReportItem:
         self.title = title
         self.description = description
         self.pattern_name = pattern_name
-        self.findings: List[Finding] = []
+        self.results: List[Result] = []
 
-    def add_finding(self, finding: Finding) -> None:
-        self.findings.append(finding)
+    def add_result(self, result: Result) -> None:
+        self.results.append(result)
 
     def to_dict(self) -> Dict:
         return {
             'patternName': self.pattern_name,
             'title': self.title,
             'description': self.description,
-            'findings': [finding.to_dict() for finding in self.findings]
+            'results': [result.to_dict() for result in self.results]
         }
-    
+
     def __repr__(self):
         return (
             '<ReportItem '
             'title={0.title} '
             'description={0.description} '
             'pattern_name={0.pattern_name} '
-            'findings={0.findings}'
+            'results={0.results}'
             '>'
         ).format(self)
 
 
 class Report:
 
-    def __init__(self, start_time: Optional[float] = -1, end_time: Optional[float] = -1) -> None:
+    def __init__(self, start_time: Optional[float] = None, end_time: Optional[float] = None) -> None:
         self.start_time = start_time
         self.end_time = end_time
-        self.items = []
+        self.reports = []
 
-    def add_item(self, item: ReportItem) -> None:
-        if item is not None:
-            self.items.append(item)
+    def add_report(self, report: ReportItem) -> None:
+        if report is not None:
+            self.reports.append(report)
 
     def add_all(self, items: List[ReportItem]) -> None:
-        self.items.extend(items)
+        self.reports.extend(items)
 
     def to_dict(self) -> Dict:
         return {
             'startTime': self.start_time,
             'endTime': self.end_time,
-            'items': [item.to_dict() for item in self.items if len(item.findings) > 0]
+            'reports': [report.to_dict() for report in self.reports if len(report.results) > 0]
         }
 
     def to_json(self, pretty: bool = False) -> Text:
@@ -87,6 +87,6 @@ class Report:
             '<Report '
             'start_time={0.start_time} '
             'end_time={0.end_time} '
-            'reports={0.items}'
+            'reports={0.reports}'
             '>'
         ).format(self)

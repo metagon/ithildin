@@ -11,7 +11,9 @@ from mythril.support.loader import DynLoader
 
 log = logging.getLogger(__name__)
 
+
 class LaserDB(metaclass=Singleton):
+    """ The class is meant to serve the sole purpose of caching symbolic execution graphs. """
 
     def __init__(self):
         self._db = {}
@@ -20,6 +22,14 @@ class LaserDB(metaclass=Singleton):
                  creation_code: Optional[Text] = None,
                  target_address: Optional[Text] = None,
                  dyn_loader: Optional[DynLoader] = None) -> svm.LaserEVM:
+        """
+        This function first checks, depending on which arguments were provided, if a laser
+        instance exists in the hash table. If *creation_code* is given, the function will search
+        with the *creation_code* as the key, otherwise if *target_address* is given, that one
+        will be used as the lookup key. In case no laser instance is found, this function will
+        create a new instance, run symbolic execution, store the laser instance in the hash
+        table and return the laser instance.
+        """
         if creation_code is not None and target_address is None:
             if creation_code not in self._db:
                 log.info('Running symbolic execution in creation mode...')
