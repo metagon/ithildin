@@ -2,7 +2,7 @@ import logging
 import re
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Text
+from typing import Dict, List, Optional, Text
 
 from ithildin.util.logic import xor
 from ithildin.model.report import ReportItem
@@ -10,10 +10,12 @@ from ithildin.support.laser_db import LaserDB
 
 from mythril.exceptions import UnsatError
 from mythril.laser.ethereum.cfg import Constraints, Edge
+from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.support.loader import DynLoader
 from mythril.support.model import get_model
 
 log = logging.getLogger(__name__)
+
 
 class AnalysisStrategy(ABC):
     """
@@ -113,3 +115,34 @@ class AnalysisStrategy(ABC):
                 if state.instruction['opcode'] == opcode:
                     return True
         return False
+
+    def _lookup_sequence(self, states: List[GlobalState], sequence: List[Dict]) -> List[int]:
+        """
+        Search for a *sequence* of instructions in a list of *states*.
+
+        Parameters
+        ----------
+        states: List[GlobalState]
+            The list of states in a node.
+        sequence: List[Dict]
+            The sequence to look for.
+
+        Returns
+        -------
+        A list of indexes where the first state in *sequence* was found.
+        """
+        j = 0  # sequence index
+        results = []
+        for i, state in enumerate(states):
+            if self._instructions_match(state.instruction, sequence[j]):
+                j += 1
+                if j == len(sequence):
+                    results.append(i - j + 1)
+                    j = 0
+            else:
+                j = 0
+        return results
+
+    def _instructions_match(self, a: Dict, b: Dict) -> bool:
+        """ Helper function for comparing two instructions and their arguments. """
+        return a.get('opcode') == b.get('opcode') and a.get('argument') == b.get('argument')
