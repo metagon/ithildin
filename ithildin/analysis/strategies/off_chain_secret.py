@@ -27,7 +27,7 @@ class OffChainSecret(AnalysisStrategy):
         for node_uid, node in self.laser.nodes.items():
             match_indexes = self._lookup_sequence(node.states, self.ENCODE_PACKED_SEQUENCE)
             if len(match_indexes) > 0 and self._opcode_follows(node_uid, 'REVERT'):
-                log.debug('Function \'%s\' is restricted by off-chain secret', node.function_name)
+                log.debug('Function \'%s\' is restricted by an off-chain secret', node.function_name)
                 function_names.add(node.function_name)
         report_item = ReportItem(REPORT_TITLE, REPORT_DESCRIPTION, PATTERN_NAME)
         for result in function_names:

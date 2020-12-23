@@ -42,11 +42,11 @@ class BinaryLoaderFactory(ContractLoaderFactory):
 class SolidityLoaderFactory(ContractLoaderFactory):
 
     def create(self) -> FileLoader:
-        return SolidityLoader(self._options.get('path'))
+        return SolidityLoader(self._options.get('path'), solc=self._options.get('solc'))
 
     @property
     def _required_options(self) -> Set[Text]:
-        return {'path'}
+        return {'path', 'solc'}
 
 
 class Web3LoaderFactory(ContractLoaderFactory):

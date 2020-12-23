@@ -24,6 +24,9 @@ def parse_cli_args() -> AnalysisStrategyFactory:
     networking_group = parser.add_argument_group('networking arguments')
     networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='web3 HTTP(s) provider URL')
 
+    compilation_group = parser.add_argument_group('compilation arguments')
+    compilation_group.add_argument('--solc', metavar='SOLC', type=Text, dest='solc', help='solc binary path', default='solc')
+
     args = parser.parse_args()
 
     # Set logging level to DEBUG for all logers if verbose option was specified
@@ -39,7 +42,7 @@ def parse_cli_args() -> AnalysisStrategyFactory:
     if args.bin_path:
         contract_loader_factory = get_factory(LoaderFactoryType.BINARY, path=args.bin_path)
     elif args.sol_path:
-        contract_loader_factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path)
+        contract_loader_factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path, solc=args.solc)
     elif args.address:
         contract_loader_factory = get_factory(LoaderFactoryType.WEB3, address=args.address, rpc=args.rpc)
     else:
