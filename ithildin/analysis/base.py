@@ -28,7 +28,8 @@ class AnalysisStrategy(ABC):
     def __init__(self,
                  creation_code: Optional[Text] = None,
                  target_address: Optional[Text] = None,
-                 dyn_loader: Optional[DynLoader] = None):
+                 dyn_loader: Optional[DynLoader] = None,
+                 laser_db: Optional[LaserDB] = LaserDB()):
         create_mode = creation_code is not None
         existing_mode = target_address is not None and dyn_loader is not None
         assert xor(create_mode, existing_mode), ('Either the contract\'s creation_code or the target_address '
@@ -36,6 +37,7 @@ class AnalysisStrategy(ABC):
         self.creation_code = creation_code
         self.target_address = target_address
         self.dyn_loader = dyn_loader
+        self._laser_db = laser_db
 
     def execute(self) -> Optional[ReportItem]:
         """
@@ -44,7 +46,7 @@ class AnalysisStrategy(ABC):
 
         This is what should be called by the client, and the actual implementation should be written in *_analyze(...)*.
         """
-        self.laser = LaserDB().sym_exec(self.creation_code, self.target_address, self.dyn_loader)
+        self.laser = self._laser_db.sym_exec(self.creation_code, self.target_address, self.dyn_loader)
         log.info('Executing analysis strategy \"%s\"', type(self).__name__)
         report_item = self._analyze()
         if report_item is not None and self.target_address and self.dyn_loader:
