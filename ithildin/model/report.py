@@ -63,6 +63,8 @@ class Report:
     def __init__(self, start_time: Optional[float] = None, end_time: Optional[float] = None) -> None:
         self.start_time = start_time
         self.end_time = end_time
+        self.contract_address = None
+        self.contract_code = None
         self.reports = []
 
     def add_report(self, report: ReportItem) -> None:
@@ -73,11 +75,16 @@ class Report:
         self.reports.extend(items)
 
     def to_dict(self) -> Dict:
-        return {
+        as_dict = {
             'startTime': self.start_time,
             'endTime': self.end_time,
-            'reports': [report.to_dict() for report in self.reports if len(report.results) > 0]
         }
+        if self.contract_address is not None:
+            as_dict['contractAddress'] = self.contract_address
+        if self.contract_code is not None:
+            as_dict['contractCode'] = self.contract_code
+        as_dict['reports'] = [report.to_dict() for report in self.reports if len(report.results) > 0]
+        return as_dict
 
     def to_json(self, pretty: bool = False) -> Text:
         return json.dumps(self.to_dict(), indent=4 if pretty else None)

@@ -1,16 +1,14 @@
 import logging
-import time
-from typing import Text
+from typing import Text, Union
 
 from argparse import ArgumentParser
 
-from ithildin.analysis.factory import AnalysisStrategyFactory
-from ithildin.analysis.strategies import StrategyType
+from ithildin.analysis.symbolic import LaserWrapper
 from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
-from ithildin.model.report import Report
+from ithildin.loader.contract_loader import FileLoader, Web3Loader
 
 
-def parse_cli_args() -> AnalysisStrategyFactory:
+def parse_cli_args() -> Union[FileLoader, Web3Loader]:
     program_name = 'Ithildin - A smart contract administrator analyzer based on Mythril'
     parser = ArgumentParser(description=program_name)
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
@@ -48,14 +46,11 @@ def parse_cli_args() -> AnalysisStrategyFactory:
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')
 
-    return AnalysisStrategyFactory(contract_loader_factory.create())
+    return contract_loader_factory.create()
 
 
 def main():
-    report = Report(start_time=time.time())
-    strategy_factory = parse_cli_args()
-    for strategy_type in StrategyType:
-        report.add_report(strategy_factory.create(strategy_type).execute())
-    report.end_time = time.time()
-    # TODO: Replace with output handler
+    contract_loader = parse_cli_args()
+    symbolic_analysis = LaserWrapper()
+    report = symbolic_analysis.execute(contract_loader=contract_loader)
     print(report.to_json(pretty=True))

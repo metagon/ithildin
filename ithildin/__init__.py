@@ -1,5 +1,4 @@
 import logging
-from logging import handlers
 
 from .setup import setup
 
