@@ -31,8 +31,6 @@ class BlockNumber:
 
 class XConfirmation(AnalysisStrategy):
 
-    OPCODE_FLAG_TARGET = 0b111
-
     pattern_name = 'X_CONFIRMATION'
     report_title = 'X-Confirmation (Block Count)'
     report_description = ('This pattern protects functions from being executed unless a condition related to the '
