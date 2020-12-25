@@ -20,7 +20,7 @@ class Result:
 
     def __repr__(self):
         return (
-            '<Finding '
+            '<Result '
             'function_name={0.function_name} '
             'storage_address={0.storage_address} '
             'storage_content={0.storage_content}'

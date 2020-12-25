@@ -1,14 +1,10 @@
-import logging
-
 from enum import Enum
-from typing import Optional, Text
+from typing import Optional
 from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.laser.smt.bitvec import BitVec
 
 from ithildin.analysis.base import AnalysisStrategy
 from ithildin.model.report import Result
-
-log = logging.getLogger(__name__)
 
 
 class Actor(Enum):
@@ -59,24 +55,14 @@ class Ownership(AnalysisStrategy):
                 state.mstate.stack[-2].annotate(Equality(Actor.OWNER))
         elif state.instruction['opcode'] == 'SLOAD':
             state.mstate.stack[-1].annotate(Storage(state.mstate.stack[-1].value))
-        elif state.instruction['opcode'] == 'JUMPI':
-            if self._is_jumpi_target(state):
-                storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
-                return Result(state.environment.active_function_name, storage_address=storage_address)
+        elif state.instruction['opcode'] == 'JUMPI' and self._is_target_jumpi(state):
+            storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
+            return Result(state.environment.active_function_name, storage_address=storage_address)
         elif self._prev_opcode(state) == 'CALLER':
             state.mstate.stack[-1].annotate(Caller())
         return None
 
-    def _has_annotation(self, bitvec: BitVec, annotation_type: type) -> bool:
-        for annotation in bitvec.annotations:
-            if isinstance(annotation, annotation_type):
-                return True
-        return False
-
-    def _prev_opcode(self, state: GlobalState) -> Text:
-        return state.environment.code.instruction_list[state.mstate.pc - 1]['opcode']
-
-    def _is_jumpi_target(self, state: GlobalState) -> bool:
+    def _is_target_jumpi(self, state: GlobalState) -> bool:
         """
         Helper method for checking if the JUMPI contains the targeted annotations.
 
@@ -88,12 +74,9 @@ class Ownership(AnalysisStrategy):
         actor_flags = 0b00
         for annotation in state.mstate.stack[-2].annotations:
             if isinstance(annotation, Equality):
-                actor_flags += 0b01 if annotation.actor == Actor.OWNER else 0
-                actor_flags += 0b10 if annotation.actor == Actor.SENDER else 0
-        if actor_flags == 0b11:
-            return True
-        else:
-            return False
+                actor_flags |= 0b01 if annotation.actor == Actor.OWNER else 0
+                actor_flags |= 0b10 if annotation.actor == Actor.SENDER else 0
+        return actor_flags == 0b11
 
     def _retrieve_storage_address(self, bitvec: BitVec):
         """ Helper function to retrieve the *storage_address* attribute from a BitVec instance. """

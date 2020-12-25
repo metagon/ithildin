@@ -9,6 +9,7 @@ from ithildin.model.report import ReportItem, Result
 from mythril.exceptions import UnsatError
 from mythril.laser.ethereum.cfg import Constraints
 from mythril.laser.ethereum.state.global_state import GlobalState
+from mythril.laser.smt.bitvec import BitVec
 from mythril.support.model import get_model
 
 log = logging.getLogger(__name__)
@@ -28,8 +29,10 @@ class AnalysisStrategy(ABC):
 
     pre_hooks: List[Text] = []
     post_hooks: List[Text] = []
-    address_cache: Set[int] = set()
-    results: List[ReportItem] = []
+
+    def __init__(self):
+        self.address_cache: Set[int] = set()
+        self.results: List[ReportItem] = []
 
     def reset(self):
         self.address_cache = set()
@@ -57,6 +60,15 @@ class AnalysisStrategy(ABC):
     def _analyze(self, state: GlobalState) -> Optional[Result]:
         """ Actual implementation of the analysis strategy. Override this when inheriting AnalysisStrategy. """
         pass
+
+    def _prev_opcode(self, state: GlobalState) -> Text:
+        return state.environment.code.instruction_list[state.mstate.pc - 1]['opcode']
+
+    def _has_annotation(self, bitvec: BitVec, annotation_type: type) -> bool:
+        for annotation in bitvec.annotations:
+            if isinstance(annotation, annotation_type):
+                return True
+        return False
 
     def _is_unsat(self, proposition: Constraints) -> bool:
         """
