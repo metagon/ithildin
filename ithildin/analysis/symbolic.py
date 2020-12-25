@@ -63,4 +63,13 @@ class LaserWrapper:
         report.contract_address = target_address
         for strategy in strategy_loader.get_strategies():
             report.add_report(strategy.generate_report())
+        self._post_process_report(report, target_address, dyn_loader)
         return report
+
+    def _post_process_report(self, report: Report, target_address: Text, dyn_loader: DynLoader) -> None:
+        if dyn_loader is None or target_address is None:
+            return
+        for report_item in report.reports:
+            for result in report_item.results:
+                if result.storage_address is not None:
+                    result.storage_content = dyn_loader.read_storage(target_address, result.storage_address)

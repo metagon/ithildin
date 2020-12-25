@@ -23,7 +23,9 @@ class Caller:
 
 class Storage:
     """ Class to be used as annotation for SLOAD elements """
-    ...
+
+    def __init__(self, storage_address: int):
+        self.storage_address = storage_address
 
 
 class Equality:
@@ -41,8 +43,8 @@ class Ownership(AnalysisStrategy):
                           'the owner of the contract is specified in the constructor and only that account '
                           'is allowed to access a function and change the contract\'s state.')
 
-    pre_hooks = ['EQ', 'JUMPI']
-    post_hooks = ['SLOAD', 'CALLER']
+    pre_hooks = ['EQ', 'JUMPI', 'SLOAD']
+    post_hooks = ['CALLER']
 
     def _analyze(self, state: GlobalState) -> Optional[Result]:
         if state.instruction['opcode'] == 'EQ':
@@ -55,11 +57,12 @@ class Ownership(AnalysisStrategy):
             elif self._has_annotation(state.mstate.stack[-1], Caller) and self._has_annotation(state.mstate.stack[-2], Storage):
                 state.mstate.stack[-1].annotate(Equality(Actor.SENDER))
                 state.mstate.stack[-2].annotate(Equality(Actor.OWNER))
+        elif state.instruction['opcode'] == 'SLOAD':
+            state.mstate.stack[-1].annotate(Storage(state.mstate.stack[-1].value))
         elif state.instruction['opcode'] == 'JUMPI':
             if self._is_jumpi_target(state):
-                return Result(state.environment.active_function_name)
-        elif self._prev_opcode(state) == 'SLOAD':
-            state.mstate.stack[-1].annotate(Storage())
+                storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
+                return Result(state.environment.active_function_name, storage_address=storage_address)
         elif self._prev_opcode(state) == 'CALLER':
             state.mstate.stack[-1].annotate(Caller())
         return None
@@ -91,3 +94,10 @@ class Ownership(AnalysisStrategy):
             return True
         else:
             return False
+
+    def _retrieve_storage_address(self, bitvec: BitVec):
+        """ Helper function to retrieve the *storage_address* attribute from a BitVec instance. """
+        for annotation in bitvec.annotations:
+            if isinstance(annotation, Storage):
+                return annotation.storage_address
+        return None
