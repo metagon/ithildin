@@ -4,7 +4,7 @@ from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.laser.smt.bitvec import BitVec
 
 from ithildin.analysis.base import AnalysisStrategy
-from ithildin.model.report import Result
+from ithildin.report.model import Result
 
 
 class Actor(Enum):

@@ -1,5 +1,6 @@
 import json
 
+from jinja2 import Environment, PackageLoader
 from typing import Dict, List, Optional, Text
 
 
@@ -77,7 +78,7 @@ class Report:
     def to_dict(self) -> Dict:
         as_dict = {
             'startTime': self.start_time,
-            'endTime': self.end_time,
+            'endTime': self.end_time
         }
         if self.contract_address is not None:
             as_dict['contractAddress'] = self.contract_address
@@ -86,8 +87,13 @@ class Report:
         as_dict['reports'] = [report.to_dict() for report in self.reports if len(report.results) > 0]
         return as_dict
 
+    def to_text(self) -> Text:
+        environment = Environment(loader=PackageLoader('ithildin.report'), trim_blocks=True)
+        template = environment.get_template('report.txt.jinja2')
+        return template.render(report=self)
+
     def to_json(self, pretty: bool = False) -> Text:
-        return json.dumps(self.to_dict(), indent=4 if pretty else None)
+        return json.dumps(self.to_dict(), indent=2 if pretty else None)
 
     def __repr__(self):
         return (

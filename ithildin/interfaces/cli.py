@@ -46,11 +46,11 @@ def parse_cli_args() -> Union[FileLoader, Web3Loader]:
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')
 
-    return contract_loader_factory.create()
+    return contract_loader_factory.create(), args
 
 
 def main():
-    contract_loader = parse_cli_args()
+    contract_loader, args = parse_cli_args()
     symbolic_analysis = LaserWrapper()
     report = symbolic_analysis.execute(contract_loader=contract_loader)
-    print(report.to_json(pretty=True))
+    print(report.to_json(pretty=True) if args.as_json else report.to_text())

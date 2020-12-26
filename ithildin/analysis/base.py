@@ -4,7 +4,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import List, Optional, Set, Text, Type
 
-from ithildin.model.report import ReportItem, Result
+from ithildin.report.model import ReportItem, Result
 
 from mythril.exceptions import UnsatError
 from mythril.laser.ethereum.cfg import Constraints

@@ -1,0 +1,31 @@
+{% if report %}
+### BEGIN REPORT ###
+Start Unix Time: {{ report.start_time }}
+End Unix Time: {{ report.end_time }}
+{% if report.contract_address %}
+Contract Address: {{ report.contract_address }}
+{% endif %}
+{% if report.contract_code %}
+{{ '-' * 20 }}
+Contract Code: {{ report.contract.code }}
+{{ '-' * 20 }}
+{% endif %}
+
+{% for report_item in report.reports %}
+=== {{ report_item.title }} ===
+{{ report_item.description | wordwrap }}
+{{ '-' * (report_item.title | length + 8) }}
+{% for result in report_item.results %}
+Function Name: {{ result.function_name }}
+{% if result.storage_address is not none %}
+Storage Address: {{ result.storage_address }}
+{% endif %}
+{% if result.storage_content %}
+Storage Content: {{ result.storage_content }}
+{% endif %}
+
+{% endfor %}
+
+{% endfor %}
+### END REPORT ###
+{% endif %}
