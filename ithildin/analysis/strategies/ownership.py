@@ -13,19 +13,19 @@ class Actor(Enum):
 
 
 class Caller:
-    """ Class to be used as annotation for CALLER elements """
+    """ Class to be used as annotation for CALLER elements. """
     ...
 
 
 class Storage:
-    """ Class to be used as annotation for SLOAD elements """
+    """ Class to be used as annotation for SLOAD elements. """
 
     def __init__(self, storage_address: int):
         self.storage_address = storage_address
 
 
 class Equality:
-    """ Class to be used as annotation for EQ elements """
+    """ Class to be used as annotation for EQ elements. """
 
     def __init__(self, actor: Actor):
         self.actor = actor
@@ -43,6 +43,9 @@ class Ownership(AnalysisStrategy):
     post_hooks = ['CALLER']
 
     def _analyze(self, state: GlobalState) -> Optional[Result]:
+        if self._prev_opcode(state) == 'CALLER':
+            state.mstate.stack[-1].annotate(Caller())
+
         if state.instruction['opcode'] == 'EQ':
             # Check if both top stack elemnts have been annotated with Caller and Storage,
             # in which case we annotate both elements with the Equality annotation, and
@@ -58,8 +61,7 @@ class Ownership(AnalysisStrategy):
         elif state.instruction['opcode'] == 'JUMPI' and self._is_target_jumpi(state):
             storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
             return Result(state.environment.active_function_name, storage_address=storage_address)
-        elif self._prev_opcode(state) == 'CALLER':
-            state.mstate.stack[-1].annotate(Caller())
+
         return None
 
     def _is_target_jumpi(self, state: GlobalState) -> bool:
@@ -78,7 +80,7 @@ class Ownership(AnalysisStrategy):
                 actor_flags |= 0b10 if annotation.actor == Actor.SENDER else 0
         return actor_flags == 0b11
 
-    def _retrieve_storage_address(self, bitvec: BitVec):
+    def _retrieve_storage_address(self, bitvec: BitVec) -> Optional[int]:
         """ Helper function to retrieve the *storage_address* attribute from a BitVec instance. """
         for annotation in bitvec.annotations:
             if isinstance(annotation, Storage):

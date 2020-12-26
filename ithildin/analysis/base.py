@@ -2,7 +2,7 @@ import logging
 import re
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Set, Text
+from typing import List, Optional, Set, Text, Type
 
 from ithildin.model.report import ReportItem, Result
 
@@ -34,11 +34,11 @@ class AnalysisStrategy(ABC):
         self.address_cache: Set[int] = set()
         self.results: List[ReportItem] = []
 
-    def reset(self):
+    def reset(self) -> None:
         self.address_cache = set()
         self.results = []
 
-    def generate_report(self):
+    def generate_report(self) -> ReportItem:
         report = ReportItem(self.report_title, self.report_description, self.pattern_name)
         for result in self.results:
             report.add_result(result)
@@ -62,9 +62,11 @@ class AnalysisStrategy(ABC):
         pass
 
     def _prev_opcode(self, state: GlobalState) -> Text:
+        """ Returns the previous opcode given the global *state*. """
         return state.environment.code.instruction_list[state.mstate.pc - 1]['opcode']
 
-    def _has_annotation(self, bitvec: BitVec, annotation_type: type) -> bool:
+    def _has_annotation(self, bitvec: BitVec, annotation_type: Type) -> bool:
+        """ Returns true if *bitvec* contains an annotation of type *annotation_type* """
         for annotation in bitvec.annotations:
             if isinstance(annotation, annotation_type):
                 return True
