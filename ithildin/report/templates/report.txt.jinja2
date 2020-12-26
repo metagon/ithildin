@@ -1,5 +1,6 @@
 {% if report %}
 ### BEGIN REPORT ###
+
 Start Unix Time: {{ report.start_time }}
 End Unix Time: {{ report.end_time }}
 {% if report.contract_address %}
@@ -25,7 +26,6 @@ Storage Content: {{ result.storage_content }}
 {% endif %}
 
 {% endfor %}
-
 {% endfor %}
 ### END REPORT ###
 {% endif %}
