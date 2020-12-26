@@ -16,6 +16,7 @@ class StrategyLoader:
 
     def register_strategy(self, strategy: AnalysisStrategy) -> None:
         assert strategy is not None, 'No strategy provided'
+        self.strategies.append(strategy)
 
     def _register_strategies(self) -> None:
         self.strategies.extend([
