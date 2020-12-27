@@ -8,11 +8,11 @@ Contract Address: {{ report.contract_address }}
 {% endif %}
 {% if report.contract_code %}
 {{ '-' * 20 }}
-Contract Code: {{ report.contract.code }}
+Contract Code: {{ report.contract_code }}
 {{ '-' * 20 }}
 {% endif %}
 
-{% for report_item in report.reports %}
+{% for report_item in report.reports if report_item.results | length > 0 %}
 === {{ report_item.title }} ===
 {{ report_item.description | wordwrap }}
 {{ '-' * (report_item.title | length + 8) }}
