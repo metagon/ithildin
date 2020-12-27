@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Text
 
 from mythril.ethereum.evmcontract import EVMContract
-from mythril.ethereum.interface.rpc.client import EthJsonRpc, GETH_DEFAULT_RPC_PORT
+from mythril.ethereum.interface.rpc.client import EthJsonRpc
 from mythril.solidity.soliditycontract import SolidityContract
 from mythril.support.loader import DynLoader
 
@@ -54,13 +54,14 @@ class Web3Loader:
         if web3 is None:
             rpc = EthJsonRpc()
         else:
-            match = re.match(r'(http(s)?:\/\/)?([a-zA-Z0-9\.\-]+)(:([0-9]+))?', web3)
+            match = re.match(r'(http(s)?:\/\/)?([a-zA-Z0-9\.\-]+)(:([0-9]+))?(\/.+)?', web3)
             if match:
                 host = match.group(3)
-                port = match.group(5) if match.group(4) else GETH_DEFAULT_RPC_PORT
+                port = match.group(5) if match.group(4) else None
+                path = match.group(6) if match.group(6) else ''
                 tls = bool(match.group(2))
-                log.debug('Parsed Web3 provider params: host=%s, port=%s, tls=%r', host, port, tls)
-                rpc = EthJsonRpc(host, port, tls)
+                log.info('Parsed Web3 provider params: host=%s, port=%s, tls=%r, path=%s', host, port, tls, path)
+                rpc = EthJsonRpc(host + path, port, tls)
             else:
                 raise ValidationError('Invalid Web3 URL provided: "%s"' % web3)
         self._dyn_loader = DynLoader(rpc)
