@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 class LaserWrapper:
 
     def execute(self,
+                timeout: Optional[float] = 60,
                 creation_code: Optional[Text] = None,
                 target_address: Optional[Text] = None,
                 dyn_loader: Optional[DynLoader] = None,
@@ -33,11 +34,11 @@ class LaserWrapper:
         world_state = None
         if creation_code is not None and target_address is None:
             log.info('Running symbolic execution in creation mode...')
-            laser = svm.LaserEVM()
+            laser = svm.LaserEVM(execution_timeout=timeout)
         elif creation_code is None and target_address is not None:
             assert dyn_loader is not None, "Dynamic Loader has not been provided"
             log.info('Running symbolic execution in existing mode...')
-            laser = svm.LaserEVM(dyn_loader)
+            laser = svm.LaserEVM(dynamic_loader=dyn_loader, execution_timeout=timeout)
             world_state = WorldState()
             world_state.accounts_exist_or_load(target_address, dyn_loader)
         else:
