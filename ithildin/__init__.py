@@ -2,7 +2,7 @@ import logging
 
 from .setup import setup
 
-formatter = logging.Formatter('%(asctime)s - %(name)s [%(levelname)s\t] %(message)s')
+formatter = logging.Formatter('[%(levelname)s\t] %(asctime)s - %(name)s %(message)s')
 
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)

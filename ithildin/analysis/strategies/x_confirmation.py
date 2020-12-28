@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Optional
 from mythril.laser.ethereum.state.global_state import GlobalState
+from mythril.laser.smt.bitvec import BitVec
 
 from ithildin.analysis.base import AnalysisStrategy
 from ithildin.report.model import Result
@@ -21,7 +22,7 @@ class Comparison:
 class Storage:
     """ Class to be used for SLOAD elements. """
 
-    def __init__(self, storage_address=None):
+    def __init__(self, storage_address: Optional[int] = None):
         self.storage_address = storage_address
 
 
@@ -43,11 +44,11 @@ class XConfirmation(AnalysisStrategy):
     pre_hooks = ['JUMPI', 'EQ', 'LT', 'GT']
     post_hooks = ['NUMBER', 'SLOAD']
 
-    def _analyze(self, state: GlobalState) -> Optional[Result]:
-        if self._prev_opcode(state) == 'NUMBER':
+    def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
+        if prev_state and prev_state.instruction['opcode'] == 'NUMBER':
             state.mstate.stack[-1].annotate(BlockNumber())
-        elif self._prev_opcode(state) == 'SLOAD':
-            state.mstate.stack[-1].annotate(Storage())
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
+            state.mstate.stack[-1].annotate(Storage(prev_state.mstate.stack[-1].value))
 
         if state.instruction['opcode'] in {'EQ', 'LT', 'GT'}:
             if self._has_annotation(state.mstate.stack[-1], BlockNumber) and self._has_annotation(state.mstate.stack[-2], Storage):
@@ -57,7 +58,8 @@ class XConfirmation(AnalysisStrategy):
                 state.mstate.stack[-1].annotate(Comparison(Element.STORAGE))
                 state.mstate.stack[-2].annotate(Comparison(Element.NUMBER))
         elif state.instruction['opcode'] == 'JUMPI' and self._is_target_jumpi(state):
-            return Result(state.environment.active_function_name)
+            storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
+            return Result(state.environment.active_function_name, storage_address=storage_address)
 
         return None
 
@@ -77,3 +79,10 @@ class XConfirmation(AnalysisStrategy):
                 item_flags |= 0b01 if annotation.item == Element.NUMBER else 0
                 item_flags |= 0b10 if annotation.item == Element.STORAGE else 0
         return item_flags == 0b11
+
+    def _retrieve_storage_address(self, bitvec: BitVec) -> Optional[int]:
+        """ Helper function to retrieve the *storage_address* attribute from a BitVec instance. """
+        for annotation in bitvec.annotations:
+            if isinstance(annotation, Storage):
+                return annotation.storage_address
+        return None

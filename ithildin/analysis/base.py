@@ -31,11 +31,11 @@ class AnalysisStrategy(ABC):
     post_hooks: List[Text] = []
 
     def __init__(self):
-        self.address_cache: Set[int] = set()
+        self.cache: Set[Text] = set()
         self.results: List[ReportItem] = []
 
     def reset(self) -> None:
-        self.address_cache = set()
+        self.cache = set()
         self.results = []
 
     def generate_report(self) -> ReportItem:
@@ -46,24 +46,20 @@ class AnalysisStrategy(ABC):
 
     def execute(self, state: GlobalState) -> Optional[Result]:
         """ Execute analysis strategy on the given state. """
-        if state.instruction['address'] in self.address_cache:
+        if state.environment.active_function_name in self.cache:
             return None
         log.debug('Executing analysis strategy %s', type(self).__name__)
-        result = self._analyze(state)
+        result = self._analyze(state, state.node.states[-1] if len(state.node.states) > 0 else None)
         if result is not None:
             log.info('Analysis strategy %s got a hit in function %s', type(self).__name__, result.function_name)
             self.results.append(result)
-            self.address_cache.add(state.instruction['address'])
+            self.cache.add(state.environment.active_function_name)
         return result
 
     @abstractmethod
-    def _analyze(self, state: GlobalState) -> Optional[Result]:
+    def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
         """ Actual implementation of the analysis strategy. Override this when inheriting AnalysisStrategy. """
         pass
-
-    def _prev_opcode(self, state: GlobalState) -> Text:
-        """ Returns the previous opcode given the global *state*. """
-        return state.environment.code.instruction_list[state.mstate.pc - 1]['opcode']
 
     def _has_annotation(self, bitvec: BitVec, annotation_type: Type) -> bool:
         """ Returns true if *bitvec* contains an annotation of type *annotation_type* """

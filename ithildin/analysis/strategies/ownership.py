@@ -6,6 +6,9 @@ from mythril.laser.smt.bitvec import BitVec
 from ithildin.analysis.base import AnalysisStrategy
 from ithildin.report.model import Result
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class Actor(Enum):
     SENDER = 1
@@ -20,7 +23,7 @@ class Caller:
 class Storage:
     """ Class to be used as annotation for SLOAD elements. """
 
-    def __init__(self, storage_address: int):
+    def __init__(self, storage_address: Optional[int] = None):
         self.storage_address = storage_address
 
 
@@ -39,12 +42,14 @@ class Ownership(AnalysisStrategy):
                           'the owner of the contract is specified in the constructor and only that account '
                           'is allowed to access a function and change the contract\'s state.')
 
-    pre_hooks = ['EQ', 'JUMPI', 'SLOAD']
-    post_hooks = ['CALLER']
+    pre_hooks = ['EQ', 'JUMPI']
+    post_hooks = ['CALLER', 'SLOAD']
 
-    def _analyze(self, state: GlobalState) -> Optional[Result]:
-        if self._prev_opcode(state) == 'CALLER':
+    def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
+        if prev_state and prev_state.instruction['opcode'] == 'CALLER':
             state.mstate.stack[-1].annotate(Caller())
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
+            state.mstate.stack[-1].annotate(Storage(prev_state.mstate.stack[-1].value))
 
         if state.instruction['opcode'] == 'EQ':
             # Check if both top stack elemnts have been annotated with Caller and Storage,
@@ -56,8 +61,6 @@ class Ownership(AnalysisStrategy):
             elif self._has_annotation(state.mstate.stack[-1], Caller) and self._has_annotation(state.mstate.stack[-2], Storage):
                 state.mstate.stack[-1].annotate(Equality(Actor.SENDER))
                 state.mstate.stack[-2].annotate(Equality(Actor.OWNER))
-        elif state.instruction['opcode'] == 'SLOAD':
-            state.mstate.stack[-1].annotate(Storage(state.mstate.stack[-1].value))
         elif state.instruction['opcode'] == 'JUMPI' and self._is_target_jumpi(state):
             storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
             return Result(state.environment.active_function_name, storage_address=storage_address)
