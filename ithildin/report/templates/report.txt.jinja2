@@ -1,5 +1,5 @@
 {% if report %}
-### BEGIN REPORT ###
+{{ '#' * 33 }} BEGIN REPORT {{ '#' * 33 }}
 
 Start Unix Time: {{ report.start_time }}
 End Unix Time: {{ report.end_time }}
@@ -7,15 +7,18 @@ End Unix Time: {{ report.end_time }}
 Contract Address: {{ report.contract_address }}
 {% endif %}
 {% if report.contract_code %}
-{{ '-' * 20 }}
-Contract Code: {{ report.contract_code }}
-{{ '-' * 20 }}
+
+{{ '-' * 32 }} Contract Code {{ '-' * 33 }}
+{{ report.contract_code | wordwrap }}
+{{ '-' * 80 }}
 {% endif %}
 
 {% for report_item in report.reports if report_item.results | length > 0 %}
-=== {{ report_item.title }} ===
+{% set pad_left = (((80 - (report_item.title | length)) / 2) | round(0, 'floor') - 1) | int %}
+{% set pad_right = (((80 - (report_item.title | length)) / 2) | round(0, 'ceil') - 1) | int %}
+{{ '~' * pad_left }} {{ report_item.title }} {{ '~' * pad_right }}
 {{ report_item.description | wordwrap }}
-{{ '-' * (report_item.title | length + 8) }}
+{{ '~' * 80 }}
 {% for result in report_item.results %}
 Function Name: {{ result.function_name }}
 {% if result.storage_address is not none %}
@@ -27,5 +30,5 @@ Storage Content: {{ result.storage_content }}
 
 {% endfor %}
 {% endfor %}
-### END REPORT ###
+{{ '#' * 34 }} END REPORT {{ '#' * 34 }}
 {% endif %}

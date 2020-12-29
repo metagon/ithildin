@@ -1,6 +1,7 @@
 from typing import List
 
 from .base import AnalysisStrategy
+from .strategies.hash_lock import HashLock
 from .strategies.ownership import Ownership
 from .strategies.x_confirmation import XConfirmation
 
@@ -20,6 +21,7 @@ class StrategyLoader:
 
     def _register_strategies(self) -> None:
         self.strategies.extend([
+            HashLock(),
             Ownership(),
             XConfirmation()
         ])
