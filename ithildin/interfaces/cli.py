@@ -12,8 +12,9 @@ def parse_cli_args() -> Union[FileLoader, Web3Loader]:
     program_name = 'Ithildin - A smart contract administrator analyzer based on Mythril'
     parser = ArgumentParser(description=program_name)
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
-    parser.add_argument('--json', action='store_true', dest='as_json', help='print report as JSON to standard output')
     parser.add_argument('--timeout', metavar='SEC', type=float, default=60, dest='timeout', help='symbolic execution timeout')
+    parser.add_argument('--json', action='store_true', dest='as_json', help=('print report as JSON to standard output '
+                                                                             '(this option supresses all logging)'))
 
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument('-b', '--bin', metavar='PATH', type=Text, dest='bin_path', help='path to file containing EVM bytecode')
