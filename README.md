@@ -1,6 +1,15 @@
 # Ithildin
 
-Smart Contract Administrator Analyzer based on Mythril
+<p align="center">
+    <img src="assets/ithildin_logo.png" height="400px" />
+</p>
+
+> Ithildin was a type of specially crafted Mithril that only the most experienced craftsmen of the Noldor could learn how to make and pass on to others.
+
+Ithilding is a semantic analyzer for Smart Contracts based on [Mythril](https://github.com/ConsenSys/mythril).
+By using symbolic execution and taint analysis, it aims at detecting functions that are restricted by authentication patterns, and to extract administrator addresses whenever possible.
+
+The [Aniron](https://thehutt.de/tolkien/fonts/aniron/readme.html) font is Copyright &copy; Pete Klassen, 2004. All rights Reserved.
 
 ## Requirements
 
@@ -46,7 +55,7 @@ $ cd <ithildin-root-dir>
 ### Analyzing Solidity Contracts
 
 ```bash
-$ ./ithil --sol Example.sol
+$ ./ithil --sol Example.sol --solc <solc-binary>
 ```
 
 ### Analyzing Bytecode Files
