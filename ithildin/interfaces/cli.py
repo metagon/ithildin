@@ -9,7 +9,7 @@ from ithildin.loader.contract_loader import FileLoader, Web3Loader
 
 
 def parse_cli_args() -> Union[FileLoader, Web3Loader]:
-    program_name = 'Ithildin - A smart contract administrator analyzer based on Mythril'
+    program_name = 'Ithildin - Semantic analyzer of EVM bytecode based on Mythril'
     parser = ArgumentParser(description=program_name)
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
     parser.add_argument('--timeout', metavar='SEC', type=float, default=60, dest='timeout', help='symbolic execution timeout')

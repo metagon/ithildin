@@ -1,6 +1,8 @@
 import logging
 import os
 
+__version__ = '0.1.0'
+
 formatter = logging.Formatter('[%(levelname)s\t] %(asctime)s - %(name)s %(message)s')
 
 stream_handler = logging.StreamHandler()
