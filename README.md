@@ -1,8 +1,6 @@
 # Ithildin
 
-<p align="center">
-    <img src="assets/ithildin_logo.png" height="400px" />
-</p>
+![Ithildin Logo](assets/ithildin_logo.png)
 
 > Ithildin was a type of specially crafted Mithril that only the most experienced craftsmen of the Noldor could learn how to make and pass on to others.
 
