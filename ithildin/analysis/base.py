@@ -67,27 +67,3 @@ class AnalysisStrategy(ABC):
             if isinstance(annotation, annotation_type):
                 return True
         return False
-
-    def _is_unsat(self, proposition: Constraints) -> bool:
-        """
-        Checks if the *proposition* is unsatisfiable.
-
-        Parameters
-        ----------
-        proposition: Constraints
-            The proposition to check.
-
-        Returns
-        -------
-        True if the proposition is unsat, False otherwise.
-        """
-        try:
-            model = get_model(proposition)
-            log.debug('Violation found...')
-            log.debug('### BEGIN DECLARATIONS ###')
-            for d in model.decls():
-                log.debug("<DECL %s = %s>", d.name(), re.sub(r'\s{2,}', ' ', str(model[d]).replace('\n', ' ')))
-            log.debug('### END DECLARATIONS ###')
-            return False
-        except UnsatError:
-            return True
