@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 
 class LaserWrapper:
 
-    def __init__(self):
-        self.strategy_loader = StrategyLoader()
+    def __init__(self, strategy_loader: Optional[StrategyLoader] = StrategyLoader()):
+        self.strategy_loader = strategy_loader
 
     def execute(self,
                 timeout: Optional[float] = 60,
