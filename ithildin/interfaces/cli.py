@@ -4,8 +4,8 @@ from argparse import ArgumentParser
 from typing import Text, Union
 
 from ithildin.analysis.symbolic import LaserWrapper
-from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
-from ithildin.loader.contract_loader import FileLoader, JsonRpcLoader
+from ithildin.contract.loader import FileLoader, JsonRpcLoader
+from ithildin.contract.loader_factory import get_factory, LoaderFactoryType
 
 
 def parse_cli_args() -> Union[FileLoader, JsonRpcLoader]:

@@ -3,7 +3,7 @@ import time
 from typing import Optional, Text, Union
 
 from ithildin.analysis.loader import StrategyLoader
-from ithildin.loader.contract_loader import FileLoader, JsonRpcLoader
+from ithildin.contract.loader import FileLoader, JsonRpcLoader
 from ithildin.report.model import Report
 
 from mythril.laser.ethereum import svm

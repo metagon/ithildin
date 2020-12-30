@@ -9,8 +9,8 @@ from sys import argv, exit
 parent_dir = dirname(dirname(realpath(__file__)))
 sys.path.append(parent_dir)
 
-from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
 from ithildin.analysis.symbolic import LaserWrapper
+from ithildin.contract.loader_factory import get_factory, LoaderFactoryType
 
 parser = ArgumentParser()
 parser.add_argument('filename', metavar='FILE', type=str)
