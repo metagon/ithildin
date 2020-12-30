@@ -7,6 +7,8 @@
 Ithilding is a semantic analysis tool for EVM bytecode based on [Mythril](https://github.com/ConsenSys/mythril).
 By using symbolic execution and taint analysis, it aims at detecting functions that are restricted by authentication patterns, and to extract administrator addresses whenever possible.
 
+Check out the wiki for a list of currently working patterns and some that are planned to be implemented soon.
+
 The [Aniron](https://thehutt.de/tolkien/fonts/aniron/readme.html) font is Copyright &copy; Pete Klassen, 2004. All rights Reserved.
 
 ## Requirements
