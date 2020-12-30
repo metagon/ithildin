@@ -16,6 +16,9 @@ log = logging.getLogger(__name__)
 
 class LaserWrapper:
 
+    def __init__(self):
+        self.strategy_loader = StrategyLoader()
+
     def execute(self,
                 timeout: Optional[float] = 60,
                 creation_code: Optional[Text] = None,
@@ -44,8 +47,7 @@ class LaserWrapper:
         else:
             raise ValueError('Either creation_code or target_address needs to be provided')
 
-        strategy_loader = StrategyLoader()
-        for strategy in strategy_loader.get_strategies():
+        for strategy in self.strategy_loader.get_strategies():
             for hook in strategy.pre_hooks:
                 laser.register_hooks('pre', {hook: [strategy.execute]})
             for hook in strategy.post_hooks:
@@ -62,7 +64,7 @@ class LaserWrapper:
         report = Report(start_time=start_time, end_time=time.time())
         report.contract_code = creation_code
         report.contract_address = target_address
-        for strategy in strategy_loader.get_strategies():
+        for strategy in self.strategy_loader.get_strategies():
             report.add_report(strategy.generate_report())
         self._post_process_report(report, target_address, dyn_loader)
         return report

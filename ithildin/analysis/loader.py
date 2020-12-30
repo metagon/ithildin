@@ -5,8 +5,10 @@ from .strategies.hash_lock import HashLock
 from .strategies.ownership import Ownership
 from .strategies.x_confirmation import XConfirmation
 
+from ithildin.support.singleton import Singleton
 
-class StrategyLoader:
+
+class StrategyLoader(metaclass=Singleton):
 
     def __init__(self) -> None:
         self.strategies = []
