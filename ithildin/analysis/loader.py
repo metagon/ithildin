@@ -21,6 +21,10 @@ class StrategyLoader(metaclass=Singleton):
         assert strategy is not None, 'No strategy provided'
         self.strategies.append(strategy)
 
+    def reset_strategies(self) -> None:
+        for strategy in self.strategies:
+            strategy.reset()
+
     def _register_strategies(self) -> None:
         self.strategies.extend([
             HashLock(),

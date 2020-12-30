@@ -9,6 +9,7 @@ from sys import exit
 parent_dir = dirname(dirname(realpath(__file__)))
 sys.path.append(parent_dir)
 
+from ithildin.analysis.loader import StrategyLoader
 from ithildin.analysis.symbolic import LaserWrapper
 from ithildin.contract.loader_factory import get_factory, LoaderFactoryType
 
@@ -21,6 +22,7 @@ parser.add_argument('--exec-timeout', dest='exec_timeout', metavar='SEC', type=f
 
 def benchmark():
     args = parser.parse_args()
+    strategy_loader = StrategyLoader()
     rpc = 'https://mainnet.infura.io/v3/' + args.infura_project_id
     with open(args.filename, 'r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=';')
@@ -43,6 +45,7 @@ def benchmark():
                 print(report.to_text())
             else:
                 print('Nothing found...')
+            strategy_loader.reset_strategies()
 
 
 if __name__ == '__main__':
