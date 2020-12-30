@@ -1,14 +1,14 @@
 import logging
-from typing import Text, Union
 
 from argparse import ArgumentParser
+from typing import Text, Union
 
 from ithildin.analysis.symbolic import LaserWrapper
 from ithildin.loader.contract_loader_factory import get_factory, LoaderFactoryType
-from ithildin.loader.contract_loader import FileLoader, Web3Loader
+from ithildin.loader.contract_loader import FileLoader, JsonRpcLoader
 
 
-def parse_cli_args() -> Union[FileLoader, Web3Loader]:
+def parse_cli_args() -> Union[FileLoader, JsonRpcLoader]:
     program_name = 'Ithildin - Semantic analyzer of EVM bytecode based on Mythril'
     parser = ArgumentParser(description=program_name)
     parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', help='print detailed output')
@@ -22,7 +22,7 @@ def parse_cli_args() -> Union[FileLoader, Web3Loader]:
     input_group.add_argument('-a', '--address', metavar='ADDRESS', type=Text, dest='address', help='contract address to analyze')
 
     networking_group = parser.add_argument_group('networking arguments')
-    networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='web3 HTTP(s) provider URL')
+    networking_group.add_argument('--rpc', metavar="RPC", type=Text, dest='rpc', help='JSON RPC provider URL')
 
     compilation_group = parser.add_argument_group('compilation arguments')
     compilation_group.add_argument('--solc', metavar='SOLC', type=Text, dest='solc', help='solc binary path', default='solc')
@@ -44,7 +44,7 @@ def parse_cli_args() -> Union[FileLoader, Web3Loader]:
     elif args.sol_path:
         contract_loader_factory = get_factory(LoaderFactoryType.SOLIDITY, path=args.sol_path, solc=args.solc)
     elif args.address:
-        contract_loader_factory = get_factory(LoaderFactoryType.WEB3, address=args.address, rpc=args.rpc)
+        contract_loader_factory = get_factory(LoaderFactoryType.JSON_RPC, address=args.address, rpc=args.rpc)
     else:
         raise NotImplementedError('This feature hasn\'t been implemented yet')
 

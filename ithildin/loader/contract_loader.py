@@ -46,25 +46,25 @@ class SolidityLoader(FileLoader):
         return SolidityContract(self._file_path, solc_binary=self._solc)
 
 
-class Web3Loader:
+class JsonRpcLoader:
 
-    def __init__(self, address: Text, web3: Optional[Text] = None):
+    def __init__(self, address: Text, rpc: Optional[Text] = None):
         assert address is not None, "No contract address provided"
 
-        if web3 is None:
-            rpc = EthJsonRpc()
+        if rpc is None:
+            eth_json_rpc = EthJsonRpc()
         else:
-            match = re.match(r'(http(s)?:\/\/)?([a-zA-Z0-9\.\-]+)(:([0-9]+))?(\/.+)?', web3)
+            match = re.match(r'(http(s)?:\/\/)?([a-zA-Z0-9\.\-]+)(:([0-9]+))?(\/.+)?', rpc)
             if match:
                 host = match.group(3)
                 port = match.group(5) if match.group(4) else None
                 path = match.group(6) if match.group(6) else ''
                 tls = bool(match.group(2))
-                log.info('Parsed Web3 provider params: host=%s, port=%s, tls=%r, path=%s', host, port, tls, path)
-                rpc = EthJsonRpc(host + path, port, tls)
+                log.debug('Parsed RPC provider params: host=%s, port=%s, tls=%r, path=%s', host, port, tls, path)
+                eth_json_rpc = EthJsonRpc(host=host + path, port=port, tls=tls)
             else:
-                raise ValidationError('Invalid Web3 URL provided: "%s"' % web3)
-        self._dyn_loader = DynLoader(rpc)
+                raise ValidationError('Invalid JSON RPC URL provided: "%s"' % rpc)
+        self._dyn_loader = DynLoader(eth_json_rpc)
         self._address = address
 
     @property

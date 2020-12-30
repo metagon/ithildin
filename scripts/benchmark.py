@@ -32,7 +32,7 @@ def benchmark():
             i += 1
             target_address = row[0]
             print('[%d/%d] Analyzing contract at %s' % (i, args.input_limit, target_address))
-            loader_factory = get_factory(LoaderFactoryType.WEB3, address=target_address, rpc=rpc)
+            loader_factory = get_factory(LoaderFactoryType.JSON_RPC, address=target_address, rpc=rpc)
             report = LaserWrapper().execute(contract_loader=loader_factory.create(), timeout=args.exec_timeout)
             has_results = False
             for report_item in report.reports:

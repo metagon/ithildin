@@ -3,7 +3,7 @@ import time
 from typing import Optional, Text, Union
 
 from ithildin.analysis.loader import StrategyLoader
-from ithildin.loader.contract_loader import FileLoader, Web3Loader
+from ithildin.loader.contract_loader import FileLoader, JsonRpcLoader
 from ithildin.report.model import Report
 
 from mythril.laser.ethereum import svm
@@ -21,11 +21,11 @@ class LaserWrapper:
                 creation_code: Optional[Text] = None,
                 target_address: Optional[Text] = None,
                 dyn_loader: Optional[DynLoader] = None,
-                contract_loader: Optional[Union[FileLoader, Web3Loader]] = None) -> Report:
+                contract_loader: Optional[Union[FileLoader, JsonRpcLoader]] = None) -> Report:
         if contract_loader is not None:
             if isinstance(contract_loader, FileLoader):
                 creation_code = contract_loader.contract().creation_disassembly.bytecode
-            elif isinstance(contract_loader, Web3Loader):
+            elif isinstance(contract_loader, JsonRpcLoader):
                 target_address = contract_loader.address
                 dyn_loader = contract_loader.dyn_loader
             else:

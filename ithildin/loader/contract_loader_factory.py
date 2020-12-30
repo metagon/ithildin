@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Set, Text, Union
 
-from ithildin.loader.contract_loader import FileLoader, BinaryLoader, SolidityLoader, Web3Loader
+from ithildin.loader.contract_loader import FileLoader, BinaryLoader, SolidityLoader, JsonRpcLoader
 
 
 class LoaderFactoryType(Enum):
     BINARY = 1
     SOLIDITY = 2
-    WEB3 = 3
+    JSON_RPC = 3
 
 
 class ContractLoaderFactory(ABC):
@@ -25,7 +25,7 @@ class ContractLoaderFactory(ABC):
         pass
 
     @abstractmethod
-    def create(self) -> Union[FileLoader, Web3Loader]:
+    def create(self) -> Union[FileLoader, JsonRpcLoader]:
         pass
 
 
@@ -49,10 +49,10 @@ class SolidityLoaderFactory(ContractLoaderFactory):
         return {'path', 'solc'}
 
 
-class Web3LoaderFactory(ContractLoaderFactory):
+class JsonRpcLoaderFactory(ContractLoaderFactory):
 
-    def create(self) -> Web3Loader:
-        return Web3Loader(self._options.get('address'), self._options.get('rpc'))
+    def create(self) -> JsonRpcLoader:
+        return JsonRpcLoader(self._options.get('address'), self._options.get('rpc'))
 
     @property
     def _required_options(self) -> Set[Text]:
@@ -63,7 +63,7 @@ def get_factory(loader_type: LoaderFactoryType, **options) -> ContractLoaderFact
     switcher = {
         LoaderFactoryType.BINARY:   BinaryLoaderFactory,
         LoaderFactoryType.SOLIDITY: SolidityLoaderFactory,
-        LoaderFactoryType.WEB3:     Web3LoaderFactory
+        LoaderFactoryType.JSON_RPC: JsonRpcLoaderFactory
     }
     if loader_type not in switcher:
         raise NotImplementedError('This factory has not been implemented yet')
