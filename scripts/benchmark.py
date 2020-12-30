@@ -4,7 +4,7 @@ import csv
 import sys
 from argparse import ArgumentParser
 from os.path import dirname, realpath
-from sys import argv, exit
+from sys import exit
 
 parent_dir = dirname(dirname(realpath(__file__)))
 sys.path.append(parent_dir)

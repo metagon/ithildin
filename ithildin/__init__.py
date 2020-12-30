@@ -1,5 +1,4 @@
 import logging
-import os
 
 from mythril.mythril.mythril_config import MythrilConfig
 
