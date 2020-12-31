@@ -3,6 +3,7 @@
 
 Start Unix Time: {{ report.start_time }}
 End Unix Time: {{ report.end_time }}
+Execution Time: {{ (report.end_time - report.start_time) | round(2) }} seconds
 {% if report.contract_address %}
 Contract Address: {{ report.contract_address }}
 {% endif %}
