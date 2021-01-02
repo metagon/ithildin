@@ -17,6 +17,22 @@ The [Aniron](https://thehutt.de/tolkien/fonts/aniron/readme.html) font is Copyri
 
 - Python 3.6+
 
+Install all requirements as described by the [Mythril docs](https://mythril-classic.readthedocs.io/en/master/installation.html):
+
+### Ubuntu
+```bash
+$ sudo apt update
+$ sudo apt install libssl-dev python3-dev python3-pip
+```
+
+### MacOS
+
+```bash
+$ brew update
+$ brew upgrade
+$ brew install leveldb
+```
+
 ## Installation
 
 ```bash
