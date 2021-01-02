@@ -11,17 +11,34 @@ log = logging.getLogger(__name__)
 
 class CallData:
     """ Annotation for input data. """
-    pass
+
+    def __eq__(self, other):
+        return isinstance(other, CallData)
+
+    def __hash__(self):
+        return hash(type(self))
 
 
 class HashedInput:
     """ Annotation to be used on SHA3 elements. """
-    pass
+
+    def __init__(self, address: int):
+        self.address = address
+
+    def __eq__(self, other: 'HashedInput'):
+        return self.address == other.address
+
+    def __hash__(self):
+        return hash((type(self), self.address))
 
 
 class HashedStorage:
-    """ Annotation to be used on SLOAD elements, where the lookup key has been hashed. """
-    pass
+
+    def __eq__(self, other):
+        return isinstance(other, HashedStorage)
+
+    def __hash__(self):
+        return hash(type(self))
 
 
 class HashLock(AnalysisStrategy):
@@ -33,27 +50,28 @@ class HashLock(AnalysisStrategy):
                           'Later, the holder of the secret can submit it to the contract, the contract checks '
                           'the secret\'s hash against the stored one, and if they match the protected logic gets executed.')
 
-    pre_hooks = ['JUMPI', 'SLOAD']
+    pre_hooks = ['JUMPI']
     post_hooks = ['SHA3', 'SLOAD', 'CALLDATALOAD']
 
     def __init__(self):
         super().__init__()
-        self.hashed_sload_cache = set()
 
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
         if prev_state and prev_state.instruction['opcode'] == 'CALLDATALOAD':
             state.mstate.stack[-1].annotate(CallData())
-        elif prev_state and prev_state.instruction['opcode'] == 'SHA3' and self._has_annotation(state.mstate.stack[-1], CallData):
-            state.mstate.stack[-1].annotate(HashedInput())
-        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD' and prev_state.instruction['address'] in self.hashed_sload_cache:
-            self.hashed_sload_cache.remove(prev_state.instruction['address'])
-            state.mstate.stack[-1].annotate(HashedStorage())
+        elif prev_state and prev_state.instruction['opcode'] == 'SHA3' and CallData() in state.mstate.stack[-1].annotations:
+            state.mstate.stack[-1].annotate(HashedInput(prev_state.instruction['address']))
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
+            for annotation in prev_state.mstate.stack[-1].annotations:
+                prev_pc = prev_state.instruction['address']
+                if isinstance(annotation, HashedInput) and annotation.address not in range(prev_pc - 4, prev_pc - 1):
+                    state.mstate.stack[-1].annotate(HashedStorage())
 
-        if state.instruction['opcode'] == 'SLOAD' and self._has_annotation(state.mstate.stack[-1], HashedInput):
-            # Workaround since annotations don't get propagated on loaded stack element.
-            # Annotation gets added on SLOAD post_hook (see condition above).
-            self.hashed_sload_cache.add(state.instruction['address'])
-        elif state.instruction['opcode'] == 'JUMPI' and self._has_annotation(state.mstate.stack[-2], HashedStorage):
+
+        if state.instruction['opcode'] == 'JUMPI' and (
+            HashedStorage() in state.mstate.stack[-2].annotations or
+            self._has_annotation(state.mstate.stack[-2], HashedInput)
+        ):
             return Result(state.environment.active_function_name)
 
         return None
