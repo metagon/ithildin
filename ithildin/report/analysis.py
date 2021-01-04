@@ -1,5 +1,4 @@
 import json
-
 from jinja2 import Environment, PackageLoader
 from typing import Dict, List, Optional, Text
 
@@ -89,7 +88,7 @@ class Report:
 
     def to_text(self) -> Text:
         environment = Environment(loader=PackageLoader('ithildin.report'), trim_blocks=True)
-        template = environment.get_template('report.txt.jinja2')
+        template = environment.get_template('analysis_report.txt.jinja2')
         return template.render(report=self)
 
     def to_json(self, pretty: bool = False) -> Text:

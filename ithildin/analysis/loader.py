@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from .base import AnalysisStrategy
 from .strategies.ownership import Ownership
@@ -11,10 +11,14 @@ class StrategyLoader(metaclass=Singleton):
 
     def __init__(self) -> None:
         self.strategies = []
-        self._register_strategies()
+        self.strategies.extend(self.default_strategies())
 
     def get_strategies(self) -> List[AnalysisStrategy]:
         return self.strategies
+
+    def set_strategies(self, strategies: List[AnalysisStrategy]) -> None:
+        assert strategies is not None and len(strategies) > 0
+        self.strategies = strategies
 
     def register_strategy(self, strategy: AnalysisStrategy) -> None:
         assert strategy is not None, 'No strategy provided'
@@ -24,8 +28,8 @@ class StrategyLoader(metaclass=Singleton):
         for strategy in self.strategies:
             strategy.reset()
 
-    def _register_strategies(self) -> None:
-        self.strategies.extend([
+    def default_strategies(self) -> List[AnalysisStrategy]:
+        return [
             Ownership(),
             XConfirmation()
-        ])
+        ]
