@@ -4,7 +4,7 @@ from typing import Optional
 from mythril.laser.ethereum.state.global_state import GlobalState
 
 from ithildin.analysis.base import AnalysisStrategy
-from ithildin.report.model import Result
+from ithildin.report.analysis import Result
 
 log = logging.getLogger(__name__)
 

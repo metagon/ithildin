@@ -1,0 +1,62 @@
+{% if report %}
+# {{ report.strategy_name }} Benchmark Results {{ 'from ' + report.start_time if report.start_time else '' }}
+
+{% if report.start_time %}
+- Start Time: {{ report.start_time }}
+{% endif %}
+{% if report.end_time %}
+- End Time: {{ report.end_time }}
+{% endif %}
+- Contracts Analyzed: {{ report.sample_size }}
+- Total Functions Identified: {{ report.total_detections }}
+
+## Configuration
+
+| Name                  | Value |
+| :-------------------- | :---- |
+| Analysis Strategy     | {{ report.strategy_name }} |
+| Execution Timeout     | {{ report.exec_timeout }} (sec) |
+| Max Graph Depth       | {{ report.max_depth }} |
+| Random Seed           | {{ report.random_seed }} |
+| Verification Ratio    | {{ report.verification_ratio }} |
+{% if report.contracts_filename %}
+| Filename              | {{ report.contracts_filename }} |
+{% endif %}
+{% if report.file_sha256sum %}
+| File SHA-256 Checksum | {{ report.file_sha256sum }} |
+{% endif %}
+
+## Statistics
+
+### Total TP, FP, TN, FN
+
+| Metric          | Value |
+| :-------------- | ----: |
+| True Positives  | {{ report.true_positives }} |
+| False Positives | {{ report.false_positives }} |
+| True Negatives  | {{ report.true_negatives }} |
+| False Negatives | {{ report.false_negatives }} |
+
+### Precision and Recall
+
+| Metric    | Value  |
+| :-------- | -----: |
+| Precision | {{ report.precision | round(4) if report.precision else 'n.a.' }} |
+| Recall    | {{ report.recall | round(4) if report.recall else 'n.a.' }} |
+
+## Analyzed Contracts Table
+
+| Contract Address | Index | Total Detections | TP | FP | TN | FN | Verified |
+| :--------------- | :---- | ---------------: | :- | :- | :- | :- | :------: |
+{% for result in report.results %}
+{% set address = result.contract_address %}
+{% set index = result.contract_index %}
+{% set hits = result.total_hits %}
+{% set verified = result.verified%}
+{% set tp = result.true_positives if verified else 'n.a.' %}
+{% set fp = result.false_positives if verified else 'n.a.' %}
+{% set tn = result.true_negatives if verified else 'n.a.' %}
+{% set fn = result.false_negatives if verified else 'n.a.' %}
+| {{ address }} | {{ index }} | {{ hits }} | {{ tp }} | {{ fp }} | {{ tn }} | {{ fn }} | {{ ':heavy_check_mark:' if verified else '' }} |
+{% endfor %}
+{% endif %}

@@ -4,7 +4,7 @@ from typing import Optional, Text, Union
 
 from ithildin.analysis.loader import StrategyLoader
 from ithildin.contract.loader import FileLoader, JsonRpcLoader
-from ithildin.report.model import Report
+from ithildin.report.analysis import Report
 
 from mythril.laser.ethereum import svm
 from mythril.laser.ethereum.state.world_state import WorldState

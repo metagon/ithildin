@@ -1,16 +1,12 @@
 import logging
-import re
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Set, Text, Type
 
-from ithildin.report.model import ReportItem, Result
+from ithildin.report.analysis import ReportItem, Result
 
-from mythril.exceptions import UnsatError
-from mythril.laser.ethereum.cfg import Constraints
 from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.laser.smt.bitvec import BitVec
-from mythril.support.model import get_model
 
 log = logging.getLogger(__name__)
 

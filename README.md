@@ -37,9 +37,9 @@ You'll have to supply the RPC endpoint using the `--rpc` argument, unless you ar
 
 ```bash
 # Using a local JSON RPC provider
-$ ithil --address 0x3D8e04CC42F61624e1B193C51f27D373A9244D9b --rpc localhost:7545
+$ ithil analyze --address 0x3D8e04CC42F61624e1B193C51f27D373A9244D9b --rpc localhost:7545
 # Using an Infura provider
-$ ithil --address 0x868326efca6e89f75a76d141167759f1ad10854c --rpc https://mainnet.infura.io/v3/<project-id>
+$ ithil analyze --address 0x868326efca6e89f75a76d141167759f1ad10854c --rpc https://mainnet.infura.io/v3/<project-id>
 ```
 
 ### Solidity Contracts
@@ -49,7 +49,7 @@ Older compilers can be downloaded from the [ethereum/solc-bin](https://github.co
 
 ```bash
 # Using solc version v0.7.6
-$ ithil --sol Example.sol --solc solc-linux-amd64-v0.7.6+commit.7338295f
+$ ithil analyze --sol Example.sol --solc solc-linux-amd64-v0.7.6+commit.7338295f
 ```
 
 ### Creation Bytecode Files
@@ -57,7 +57,7 @@ $ ithil --sol Example.sol --solc solc-linux-amd64-v0.7.6+commit.7338295f
 Provide a file containing the EVM (creation) bytecode in one line.
 
 ```bash
-$ ithil --bin Example.bin
+$ ithil analyze --bin Example.bin
 ```
 
 ## Development Setup
