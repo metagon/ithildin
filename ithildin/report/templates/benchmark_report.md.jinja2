@@ -41,8 +41,8 @@
 
 | Metric    | Value  |
 | :-------- | -----: |
-| Precision | {{ report.precision | round(4) if report.precision else 'n.a.' }} |
-| Recall    | {{ report.recall | round(4) if report.recall else 'n.a.' }} |
+| Precision | {{ report.precision | round(4) if report.precision else 'n/a' }} |
+| Recall    | {{ report.recall | round(4) if report.recall else 'n/a' }} |
 
 ## Analyzed Contracts Table
 
@@ -52,11 +52,11 @@
 {% set address = result.contract_address %}
 {% set index = result.contract_index %}
 {% set hits = result.total_hits %}
-{% set verified = result.verified%}
-{% set tp = result.true_positives if verified else 'n.a.' %}
-{% set fp = result.false_positives if verified else 'n.a.' %}
-{% set tn = result.true_negatives if verified else 'n.a.' %}
-{% set fn = result.false_negatives if verified else 'n.a.' %}
+{% set verified = result.verified %}
+{% set tp = result.true_positives if verified else 'n/a' %}
+{% set fp = result.false_positives if verified else 'n/a' %}
+{% set tn = result.true_negatives if verified else 'n/a' %}
+{% set fn = result.false_negatives if verified else 'n/a' %}
 | {{ address }} | {{ index }} | {{ hits }} | {{ tp }} | {{ fp }} | {{ tn }} | {{ fn }} | {{ ':heavy_check_mark:' if verified else '' }} |
 {% endfor %}
 {% endif %}
