@@ -68,7 +68,7 @@ def populate_benchmark_parser(parser: ArgumentParser) -> None:
     sampling_group.add_argument('--verification-ratio', metavar='RATIO', type=float, default=DEFAULT_VERIFICATION_RATIO,
                                 help='the ratio of the sampled contracts to manually verify (default: {})'.format(DEFAULT_VERIFICATION_RATIO))
     sampling_group.add_argument('--compiler-target', metavar='x.x.x', action=VersionParseAction,
-                           help='the Solidity compiler target to match in the sample (e.g. ^0.7.0)')
+                                help='the Solidity compiler target to match in the sample (e.g. ^0.7.0)')
 
     csv_group = parser.add_argument_group('CSV arguments')
     csv_group.add_argument('--has-header', action='store_true', default=DEFAULT_HAS_HEADER,
