@@ -6,10 +6,15 @@ from typing import List, Optional, Text
 
 class Result:
 
-    def __init__(self, contract_address: Text, contract_index: int, detected_functions: List[Text]) -> None:
+    def __init__(self,
+                 contract_address: Text,
+                 contract_index: int,
+                 detected_functions: List[Text],
+                 compiler_version: Optional[Text] = None) -> None:
         self.contract_address = contract_address
         self.contract_index = contract_index
         self.detected_functions = detected_functions
+        self.compiler_version = compiler_version
         self.verified = False
         self.true_positives = 0
         self.false_positives = 0
@@ -38,12 +43,14 @@ class Result:
 class Report:
 
     def __init__(self, strategy_name: Text, random_seed: int, exec_timeout: int, max_depth: int,
-                 verification_ratio: float, contracts_filename=None, file_sha256sum=None, start_time=None, end_time=None) -> None:
+                 verification_ratio: float, target_version=None, contracts_filename=None,
+                 file_sha256sum=None, start_time=None, end_time=None) -> None:
         self.strategy_name = strategy_name
         self.random_seed = random_seed
         self.exec_timeout = exec_timeout
         self.max_depth = max_depth
         self.verification_ratio = verification_ratio
+        self.target_version = target_version
         self.contracts_filename = contracts_filename
         self.file_sha256sum = file_sha256sum
         self.start_time = start_time
@@ -107,8 +114,11 @@ class Report:
             'strategy_name={0.strategy_name} '
             'random_seed={0.random_seed} '
             'exec_timeout={0.exec_timeout} '
+            'max_depth={0.max_depth} '
             'verification_ratio={0.verification_ratio} '
+            'target_version={0.target_version} '
             'contracts_filename={0.contracts_filename} '
+            'file_sha256sum={0.file_sha256sum} '
             'start_time={0.start_time} '
             'end_time={0.end_time} '
             'results={0.results}'

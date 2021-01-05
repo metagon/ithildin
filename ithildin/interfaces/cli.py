@@ -1,13 +1,12 @@
 import logging
 
 from argparse import ArgumentParser
-from sys import exit
-from typing import Text, Union
+from typing import Text
 
 from ithildin import __version__
 from ithildin.analysis.symbolic import LaserWrapper
-from ithildin.contract.loader import FileLoader, JsonRpcLoader
 from ithildin.contract.loader_factory import get_factory, LoaderFactoryType
+from ithildin.support.compiler_version import VersionParseAction
 from ithildin.tools.benchmark import benchmark, STRATEGIES
 
 # Default analysis arguments
@@ -17,8 +16,9 @@ DEFAULT_SOLC = 'solc'
 DEFAULT_TIMEOUT_ANALYSIS = 60
 
 # Default benchmark arguments
-DEFAULT_DELIMITER = ';'
+DEFAULT_DELIMITER = ','
 DEFAULT_HAS_HEADER = True
+DEFAULT_ADDRESS_COLUMN = 0
 DEFAULT_SAMPLE_SIZE = 5
 DEFAULT_TIMEOUT_BENCHMARK = 90
 DEFAULT_SEED = 1
@@ -67,12 +67,19 @@ def populate_benchmark_parser(parser: ArgumentParser) -> None:
                                 help='a seed for the sampling RNG (default: {})'.format(DEFAULT_SEED))
     sampling_group.add_argument('--verification-ratio', metavar='RATIO', type=float, default=DEFAULT_VERIFICATION_RATIO,
                                 help='the ratio of the sampled contracts to manually verify (default: {})'.format(DEFAULT_VERIFICATION_RATIO))
+    sampling_group.add_argument('--compiler-target', metavar='x.x.x', action=VersionParseAction,
+                           help='the Solidity compiler target to match in the sample (e.g. ^0.7.0)')
 
     csv_group = parser.add_argument_group('CSV arguments')
     csv_group.add_argument('--has-header', action='store_true', default=DEFAULT_HAS_HEADER,
                            help='does the CSV file contain a header (default: {})'.format(DEFAULT_HAS_HEADER))
     csv_group.add_argument('--csv-delimiter', metavar='DELIMITER', type=str, default=DEFAULT_DELIMITER,
                            help='the CSV delimiter (default: \'{}\')'.format(DEFAULT_DELIMITER))
+    csv_group.add_argument('--address-column', metavar='COL', type=int, default=DEFAULT_ADDRESS_COLUMN,
+                           help='column index that contains the contract addresses (default: {})'.format(DEFAULT_ADDRESS_COLUMN))
+    csv_group.add_argument('--compiler-column', metavar='COL', type=int, help='the column containing the compiler name')
+    csv_group.add_argument('--version-column', metavar='COL', type=int,
+                           help='column index that contains the compiler version used')
 
 
 def get_parser() -> ArgumentParser:
