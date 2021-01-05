@@ -12,18 +12,19 @@
 
 ## Configuration
 
-| Name                  | Value |
-| :-------------------- | :---- |
-| Analysis Strategy     | {{ report.strategy_name }} |
-| Execution Timeout     | {{ report.exec_timeout }} (sec) |
-| Max Graph Depth       | {{ report.max_depth }} |
-| Random Seed           | {{ report.random_seed }} |
-| Verification Ratio    | {{ report.verification_ratio }} |
+| Name                    | Value |
+| :---------------------- | :---- |
+| Analysis Strategy       | {{ report.strategy_name }} |
+| Compiler Target Version | {{ report.target_version if report.target_version else 'n/a' }} |
+| Execution Timeout       | {{ report.exec_timeout }} (sec) |
+| Max Graph Depth         | {{ report.max_depth }} |
+| Random Seed             | {{ report.random_seed }} |
+| Verification Ratio      | {{ report.verification_ratio }} |
 {% if report.contracts_filename %}
-| Filename              | {{ report.contracts_filename }} |
+| Filename                | {{ report.contracts_filename }} |
 {% endif %}
 {% if report.file_sha256sum %}
-| File SHA-256 Checksum | {{ report.file_sha256sum }} |
+| File SHA-256 Checksum   | {{ report.file_sha256sum }} |
 {% endif %}
 
 ## Statistics
@@ -41,22 +42,23 @@
 
 | Metric    | Value  |
 | :-------- | -----: |
-| Precision | {{ report.precision | round(4) if report.precision else 'n.a.' }} |
-| Recall    | {{ report.recall | round(4) if report.recall else 'n.a.' }} |
+| Precision | {{ report.precision | round(4) if report.precision else 'n/a' }} |
+| Recall    | {{ report.recall | round(4) if report.recall else 'n/a' }} |
 
 ## Analyzed Contracts Table
 
-| Contract Address | Index | Total Detections | TP | FP | TN | FN | Verified |
-| :--------------- | :---- | ---------------: | :- | :- | :- | :- | :------: |
+| Contract Address | Index | Compiler | Total Detections | TP | FP | TN | FN | Verified |
+| :--------------- | :---- | :------- | ---------------: | :- | :- | :- | :- | :------: |
 {% for result in report.results %}
 {% set address = result.contract_address %}
-{% set index = result.contract_index %}
+{% set index = result.contract_index + 1 %}
+{% set compiler = result.compiler_version if result.compiler_version else 'n/a' %}
 {% set hits = result.total_hits %}
-{% set verified = result.verified%}
-{% set tp = result.true_positives if verified else 'n.a.' %}
-{% set fp = result.false_positives if verified else 'n.a.' %}
-{% set tn = result.true_negatives if verified else 'n.a.' %}
-{% set fn = result.false_negatives if verified else 'n.a.' %}
-| {{ address }} | {{ index }} | {{ hits }} | {{ tp }} | {{ fp }} | {{ tn }} | {{ fn }} | {{ ':heavy_check_mark:' if verified else '' }} |
+{% set verified = result.verified %}
+{% set tp = result.true_positives if verified else 'n/a' %}
+{% set fp = result.false_positives if verified else 'n/a' %}
+{% set tn = result.true_negatives if verified else 'n/a' %}
+{% set fn = result.false_negatives if verified else 'n/a' %}
+| {{ address }} | {{ index }} | {{ compiler }} | {{ hits }} | {{ tp }} | {{ fp }} | {{ tn }} | {{ fn }} | {{ ':heavy_check_mark:' if verified else '' }} |
 {% endfor %}
 {% endif %}
