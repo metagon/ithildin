@@ -14,11 +14,13 @@
 
 | Name                    | Value |
 | :---------------------- | :---- |
+| Ithildin Version        | {{ program_version }} |
 | Analysis Strategy       | {{ report.strategy_name }} |
 | Compiler Target Version | {{ report.target_version if report.target_version else 'n/a' }} |
 | Execution Timeout       | {{ report.exec_timeout }} (sec) |
 | Max Graph Depth         | {{ report.max_depth }} |
 | Random Seed             | {{ report.random_seed }} |
+| Sample Size             | {{ report.sample_size }} |
 | Verification Ratio      | {{ report.verification_ratio }} |
 {% if report.contracts_filename %}
 | Filename                | {{ report.contracts_filename }} |

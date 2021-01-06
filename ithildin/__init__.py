@@ -2,7 +2,7 @@ import logging
 
 from mythril.mythril.mythril_config import MythrilConfig
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 formatter = logging.Formatter('[%(levelname)s\t] %(asctime)s - %(name)s %(message)s')
 
