@@ -3,6 +3,8 @@ import json
 from jinja2 import Environment, PackageLoader
 from typing import List, Optional, Text
 
+from ithildin import __version__
+
 
 class Result:
 
@@ -106,7 +108,7 @@ class Report:
     def to_markdown(self):
         environment = Environment(loader=PackageLoader('ithildin.report'), trim_blocks=True)
         template = environment.get_template('benchmark_report.md.jinja2')
-        return template.render(report=self)
+        return template.render(report=self, program_version=__version__)
 
     def __repr__(self) -> Text:
         return (
