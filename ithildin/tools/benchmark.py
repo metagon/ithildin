@@ -36,7 +36,10 @@ def start_verification(report: Report, verification_sample: Set[int]) -> None:
         print('! Results:\n' + result.to_json(pretty=True))
         # TODO: Does mythril contain any function for retrieving this value?
         print('! How many functions does the contract contain in total (excluding constructors)?')
-        total_functions_count = int(input('> Your answer: '), base=10)
+        functions_count_answer = input('> Your answer [Type \'s\' to skip]: ')
+        if functions_count_answer == 's':
+            continue
+        total_functions_count = int(functions_count_answer, base=10)
         if result.total_hits > 0:
             print('! Did the analysis strategy correctly identify *all* functions in the contract?')
             answer = input('> Your answer [y/n]: ')
@@ -89,7 +92,7 @@ def generate_contract_sample(file: Text,
         with open(file, 'r') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=delimiter)
             for i, row in enumerate(csv_reader):
-                if compiler_name_column is None or row[compiler_name_column].startswith('Solidity'):
+                if compiler_name_column is None or row[compiler_name_column].strip() == 'Solidity':
                     try:
                         version = Version(raw=row[compiler_version_column])
                     except ValueError:
