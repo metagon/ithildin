@@ -1,7 +1,6 @@
 import csv
 import hashlib
 import logging
-import math
 import os
 import random
 import time
@@ -140,6 +139,6 @@ def benchmark(args) -> None:
             strategy_loader.reset_strategies()
     benchmark_report.end_time = time.strftime(TIME_FORMAT)
     negative_instances = contract_sample - positive_instances
-    positive_sample = set(random.sample(positive_instances, math.ceil(len(positive_instances) * args.verification_ratio)))
-    negative_sample = set(random.sample(negative_instances, math.ceil(len(negative_instances) * args.verification_ratio)))
+    positive_sample = set(random.sample(positive_instances, round(len(positive_instances) * args.verification_ratio)))
+    negative_sample = set(random.sample(negative_instances, round(len(negative_instances) * args.verification_ratio)))
     start_verification(benchmark_report, positive_sample | negative_sample)
