@@ -3,21 +3,32 @@ import re
 
 from ithildin.exception import ValidationError
 
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from typing import Optional, Text
 
 from mythril.ethereum.evmcontract import EVMContract
 from mythril.ethereum.interface.rpc.client import EthJsonRpc
+from mythril.disassembler.disassembly import Disassembly
 from mythril.solidity.soliditycontract import SolidityContract
 from mythril.support.loader import DynLoader
 
 log = logging.getLogger(__name__)
 
 
-class FileLoader(ABC):
+class ContractLoader(ABC):
+
+    @abstractmethod
+    def disassembly(self) -> Optional[Disassembly]:
+        pass
+
+
+class FileLoader(ContractLoader, metaclass=ABCMeta):
 
     def __init__(self, file_path):
         self._file_path = file_path
+
+    def disassembly(self) -> Disassembly:
+        return self.contract().disassembly
 
     @abstractmethod
     def contract(self) -> EVMContract:
@@ -46,7 +57,7 @@ class SolidityLoader(FileLoader):
         return SolidityContract(self._file_path, solc_binary=self._solc)
 
 
-class JsonRpcLoader:
+class JsonRpcLoader(ContractLoader):
 
     def __init__(self, address: Text, rpc: Optional[Text] = None):
         assert address is not None, "No contract address provided"
@@ -74,3 +85,6 @@ class JsonRpcLoader:
     @property
     def address(self) -> Text:
         return self._address
+
+    def disassembly(self) -> Optional[Disassembly]:
+        return self.dyn_loader.dynld(self.address)

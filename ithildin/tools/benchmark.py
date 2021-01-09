@@ -24,21 +24,26 @@ STRATEGIES = {
 }
 
 
+@lru_cache(maxsize=5)
+def count_rows(file: Text, delimiter=',') -> int:
+    with open(file, 'r') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=delimiter)
+        return sum(1 for _ in csv_reader)
+
+
 def start_verification(report: Report, verification_sample: Set[int]) -> None:
-    print()
-    print('=' * 80)
+    print('\n' + '=' * 80)
     print('! Entering verification mode...')
     for result in report.results:
         if result.contract_index not in verification_sample:
             continue
         print('! Verifying contract at address %s' % result.contract_address)
-        print('! Results:\n' + result.to_json(pretty=True))
-        # TODO: Does mythril contain any function for retrieving this value?
-        print('! How many functions does the contract contain in total (excluding constructors)?')
-        functions_count_answer = input('> Your answer [Type \'s\' to skip]: ')
-        if functions_count_answer == 's':
-            continue
-        total_functions_count = int(functions_count_answer, base=10)
+        total_functions_count = len(result.disassembly.func_hashes)
+        print('! Total functions in contract: %d' % total_functions_count)
+        if len(result.detected_functions) > 0:
+            print('! Detected functions:')
+        for func in sorted(result.detected_functions):
+            print('! - %s' % func)
         if result.total_hits > 0:
             print('! Did the analysis strategy correctly identify *all* functions in the contract?')
             answer = input('> Your answer [y/n]: ')
@@ -68,13 +73,6 @@ def start_verification(report: Report, verification_sample: Set[int]) -> None:
         result.verified = True
     print('=' * 80)
     print(report.to_markdown())
-
-
-@lru_cache(maxsize=5)
-def count_rows(file: Text, delimiter=',') -> int:
-    with open(file, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=delimiter)
-        return sum(1 for _ in csv_reader)
 
 
 def generate_contract_sample(file: Text,
@@ -126,7 +124,8 @@ def benchmark(args) -> None:
             target_address = row[args.address_column]
             log.info('Analyzing contract %d/%d at address %s', i + 1, instance_count, target_address)
             loader_factory = get_factory(LoaderFactoryType.JSON_RPC, address=target_address, rpc=rpc)
-            analysis_report = LaserWrapper().execute(contract_loader=loader_factory.create(), timeout=args.timeout, max_depth=args.max_depth)
+            contract_loader = loader_factory.create()
+            analysis_report = LaserWrapper().execute(contract_loader=contract_loader, timeout=args.timeout, max_depth=args.max_depth)
             if sum(len(report_item.results) for report_item in analysis_report.reports) > 0:
                 positive_instances.add(i)
             else:
@@ -135,7 +134,8 @@ def benchmark(args) -> None:
                               for report_item in analysis_report.reports if len(report_item.results) > 0
                               for result in report_item.results]
             compiler_version = row[args.version_column] if args.version_column is not None else None
-            benchmark_report.add_result(Result(target_address, i, function_names, compiler_version=compiler_version))
+            benchmark_report.add_result(Result(contract_loader.disassembly(), target_address, i, function_names,
+                                               compiler_version=compiler_version))
             strategy_loader.reset_strategies()
     benchmark_report.end_time = time.strftime(TIME_FORMAT)
     negative_instances = contract_sample - positive_instances

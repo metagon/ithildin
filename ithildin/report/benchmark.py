@@ -4,15 +4,18 @@ from jinja2 import Environment, PackageLoader
 from typing import List, Optional, Text
 
 from ithildin import __version__
+from mythril.disassembler.disassembly import Disassembly
 
 
 class Result:
 
     def __init__(self,
+                 disassembly: Disassembly,
                  contract_address: Text,
                  contract_index: int,
                  detected_functions: List[Text],
                  compiler_version: Optional[Text] = None) -> None:
+        self.disassembly = disassembly
         self.contract_address = contract_address
         self.contract_index = contract_index
         self.detected_functions = detected_functions
