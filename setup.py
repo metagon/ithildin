@@ -8,7 +8,8 @@ PYTHON_REQUIREMENT = '>=3.6.0'
 
 REQUIREMENTS = [
     "Jinja2==2.11.2",
-    "mythril==0.22.14"
+    "mythril==0.22.14",
+    "SQLAlchemy==1.3.22"
 ]
 
 setup(

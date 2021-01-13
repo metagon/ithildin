@@ -6,6 +6,11 @@ from .strategies.x_confirmation import XConfirmation
 
 from ithildin.support.singleton import Singleton
 
+STRATEGIES = {
+    'OWNERSHIP': Ownership,
+    'X_CONFIRMATION': XConfirmation
+}
+
 
 class StrategyLoader(metaclass=Singleton):
 
@@ -29,7 +34,4 @@ class StrategyLoader(metaclass=Singleton):
             strategy.reset()
 
     def default_strategies(self) -> List[AnalysisStrategy]:
-        return [
-            Ownership(),
-            XConfirmation()
-        ]
+        return [Strategy() for Strategy in STRATEGIES.values()]
