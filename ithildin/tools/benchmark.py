@@ -7,7 +7,7 @@ import random
 import time
 
 from functools import lru_cache
-from typing import List, Optional, Set, Text, Tuple
+from typing import Optional, Set, Text, Tuple
 
 from mythril.disassembler.disassembly import Disassembly
 from mythril.support.signatures import SignatureDB
@@ -20,7 +20,7 @@ from .verification_db.function_repository import FunctionRepository
 from .verification_db.flagged_function_repository import FlaggedFunctionRepository
 from ithildin.analysis.loader import StrategyLoader
 from ithildin.analysis.symbolic import LaserWrapper
-from ithildin.analysis.loader import Ownership, XConfirmation, STRATEGIES
+from ithildin.analysis.loader import STRATEGIES
 from ithildin.contract.loader_factory import get_factory, LoaderFactoryType
 from ithildin.report.benchmark import Report, Result
 from ithildin.support.compiler_version import Version, VersionMatcher

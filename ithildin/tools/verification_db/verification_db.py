@@ -2,9 +2,7 @@
 
 import enum
 
-from typing import Text
-
-from sqlalchemy import create_engine, Boolean, Column, Enum, ForeignKey, Integer, String, Table
+from sqlalchemy import create_engine, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 

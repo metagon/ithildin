@@ -1,6 +1,6 @@
 from typing import Optional, Text, Union
 
-from .verification_db import VerificationDB, Contract, Flag, Function, FlaggedFunction, Strategy
+from .verification_db import VerificationDB, Flag, Function, FlaggedFunction, Strategy
 
 
 class FlaggedFunctionRepository:

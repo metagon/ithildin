@@ -1,5 +1,4 @@
 import os
-import stat
 
 ithildin_dir_name = '.ithildin'
 ithildin_home = os.path.join(os.path.expanduser('~'), ithildin_dir_name)
