@@ -4,15 +4,18 @@ from jinja2 import Environment, PackageLoader
 from typing import List, Optional, Text
 
 from ithildin import __version__
+from mythril.disassembler.disassembly import Disassembly
 
 
 class Result:
 
     def __init__(self,
+                 disassembly: Disassembly,
                  contract_address: Text,
                  contract_index: int,
                  detected_functions: List[Text],
                  compiler_version: Optional[Text] = None) -> None:
+        self.disassembly = disassembly
         self.contract_address = contract_address
         self.contract_index = contract_index
         self.detected_functions = detected_functions
@@ -33,9 +36,11 @@ class Result:
 
     def to_dict(self):
         return {
+            'bytecode': self.disassembly.bytecode,
             'contractAddress': self.contract_address,
             'contractIndex': self.contract_index,
-            'detectedFunctions': self.detected_functions
+            'detectedFunctions': self.detected_functions,
+            'compilerVersion': self.compiler_version
         }
 
     def to_json(self, pretty=False):
@@ -104,6 +109,24 @@ class Report:
             return self.true_positives / (self.true_positives + self.false_negatives)
         except ZeroDivisionError:
             return None
+
+    def to_dict(self):
+        return {
+            'strategyName': self.strategy_name,
+            'randomSeed': self.random_seed,
+            'execTimeout': self.exec_timeout,
+            'maxDepth': self.max_depth,
+            'verificationRatio': self.verification_ratio,
+            'targetVersion': self.target_version,
+            'contractsFilename': self.contracts_filename,
+            'fileSha256Sum': self.file_sha256sum,
+            'startTime': self.start_time,
+            'endTime': self.end_time,
+            'results': [result.to_dict() for result in self.results]
+        }
+
+    def to_json(self, pretty=False):
+        return json.dumps(self.to_dict(), indent=2 if pretty else None)
 
     def to_markdown(self):
         environment = Environment(loader=PackageLoader('ithildin.report'), trim_blocks=True)

@@ -4,10 +4,12 @@ from argparse import ArgumentParser
 from typing import Text
 
 from ithildin import __version__
+from ithildin.analysis.loader import STRATEGIES
 from ithildin.analysis.symbolic import LaserWrapper
 from ithildin.contract.loader_factory import get_factory, LoaderFactoryType
 from ithildin.support.compiler_version import VersionParseAction
-from ithildin.tools.benchmark import benchmark, STRATEGIES
+from ithildin.tools import benchmark_state_path
+from ithildin.tools.benchmark import benchmark
 
 # Default analysis arguments
 DEFAULT_MAX_DEPTH = 128
@@ -50,17 +52,21 @@ def populate_analysis_parser(parser: ArgumentParser) -> None:
 
 
 def populate_benchmark_parser(parser: ArgumentParser) -> None:
-    parser.add_argument('filename', metavar='FILE', type=str, help='the csv file containing contract instances')
-    parser.add_argument('--infura-project', dest='infura_project_id', metavar='PROJECT_ID', type=str, required=True,
-                        help='the Infura project ID for retrieving contract data from the mainchain')
-    parser.add_argument('--strategy', default=list(STRATEGIES.keys())[0], choices=STRATEGIES.keys(),
-                        help='which strategy to benchmark (default: \'{}\')'.format(list(STRATEGIES.keys())[0]))
-    parser.add_argument('--timeout', metavar='SEC', type=int, default=DEFAULT_TIMEOUT_BENCHMARK,
-                        help='the execution timeout for each contract (default: {})'.format(DEFAULT_TIMEOUT_BENCHMARK))
-    parser.add_argument('--max-depth', metavar='DEPTH', type=int, default=DEFAULT_MAX_DEPTH,
-                        help='max graph depth (default: {})'.format(DEFAULT_MAX_DEPTH))
+    benchmark_subparsers = parser.add_subparsers(dest='benchmark_command', help='Commands')
 
-    sampling_group = parser.add_argument_group('sampling options')
+    new_benchmark_parser = benchmark_subparsers.add_parser('new', help='start a new benchmark')
+    new_benchmark_parser.add_argument('filename', metavar='FILE', type=str, help='the csv file containing contract instances')
+    strategies_options = [strategy.replace('_', '-').lower() for strategy in STRATEGIES.keys()]
+    new_benchmark_parser.add_argument('--strategy', choices=strategies_options, required=True, help='the strategy to benchmark')
+    new_benchmark_parser.add_argument('--interactive', action='store_true', help='after analysis proceed to interactive verification mode')
+    new_benchmark_parser.add_argument('--infura-project', dest='infura_project_id', metavar='PROJECT_ID', type=str, required=True,
+                                      help='the Infura project ID for retrieving contract data from the mainchain')
+    new_benchmark_parser.add_argument('--timeout', metavar='SEC', type=int, default=DEFAULT_TIMEOUT_BENCHMARK,
+                                      help='the execution timeout for each contract (default: {})'.format(DEFAULT_TIMEOUT_BENCHMARK))
+    new_benchmark_parser.add_argument('--max-depth', metavar='DEPTH', type=int, default=DEFAULT_MAX_DEPTH,
+                                      help='max graph depth (default: {})'.format(DEFAULT_MAX_DEPTH))
+
+    sampling_group = new_benchmark_parser.add_argument_group('sampling options')
     sampling_group.add_argument('--sample-size', metavar='SIZE', type=int, default=DEFAULT_SAMPLE_SIZE,
                                 help='the sample size to be picked from the CSV instances (default: {})'.format(DEFAULT_SAMPLE_SIZE))
     sampling_group.add_argument('--random-seed', metavar='SEED', type=int, default=DEFAULT_SEED,
@@ -70,7 +76,7 @@ def populate_benchmark_parser(parser: ArgumentParser) -> None:
     sampling_group.add_argument('--compiler-target', metavar='x.x.x', action=VersionParseAction,
                                 help='the Solidity compiler target to match in the sample (e.g. ^0.7.0)')
 
-    csv_group = parser.add_argument_group('CSV arguments')
+    csv_group = new_benchmark_parser.add_argument_group('CSV arguments')
     csv_group.add_argument('--has-header', action='store_true', default=DEFAULT_HAS_HEADER,
                            help='does the CSV file contain a header (default: {})'.format(DEFAULT_HAS_HEADER))
     csv_group.add_argument('--csv-delimiter', metavar='DELIMITER', type=str, default=DEFAULT_DELIMITER,
@@ -80,6 +86,10 @@ def populate_benchmark_parser(parser: ArgumentParser) -> None:
     csv_group.add_argument('--compiler-column', metavar='COL', type=int, help='the column containing the compiler name')
     csv_group.add_argument('--version-column', metavar='COL', type=int,
                            help='column index that contains the compiler version used')
+
+    verify_benchmark_parser = benchmark_subparsers.add_parser('verify', help='verify previously stored benchmark state in interactive mode')
+    verify_benchmark_parser.add_argument('--file', metavar='FILE', dest='benchmark_state_file', default=benchmark_state_path,
+                                         help='path to benchmark state file (default: {})'.format(benchmark_state_path))
 
 
 def get_parser() -> ArgumentParser:
@@ -126,5 +136,8 @@ def main():
 
     if args.command == 'analyze':
         analyze(args)
-    elif args.command == 'benchmark':
+    elif args.command == 'benchmark' and args.benchmark_command is not None:
         benchmark(args)
+    else:
+        parser.print_help()
+        exit(1)

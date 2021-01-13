@@ -8,8 +8,17 @@ from ithildin.report.analysis import Report
 
 from mythril.laser.ethereum import svm
 from mythril.laser.ethereum.state.world_state import WorldState
+from mythril.laser.ethereum.strategy.extensions.bounded_loops import BoundedLoopsStrategy
+from mythril.laser.plugin.loader import LaserPluginLoader
 from mythril.support.loader import DynLoader
 
+from mythril.laser.plugin.plugins import (
+    MutationPrunerBuilder,
+    DependencyPrunerBuilder,
+    CoveragePluginBuilder,
+    CallDepthLimitBuilder,
+    InstructionProfilerBuilder,
+)
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +31,8 @@ class LaserWrapper:
     def execute(self,
                 timeout: Optional[float] = 60,
                 max_depth: Optional[int] = 128,
+                call_depth_limit: Optional[int] = 3,
+                bounded_loops_limit: Optional[int] = 3,
                 creation_code: Optional[Text] = None,
                 target_address: Optional[Text] = None,
                 dyn_loader: Optional[DynLoader] = None,
@@ -58,6 +69,17 @@ class LaserWrapper:
                 laser.register_hooks('pre', {hook: [strategy.execute]})
             for hook in strategy.post_hooks:
                 laser.register_hooks('post', {hook: [strategy.execute]})
+
+        # Load laser plugins
+        laser.extend_strategy(BoundedLoopsStrategy, bounded_loops_limit)
+        plugin_loader = LaserPluginLoader()
+        plugin_loader.load(CoveragePluginBuilder())
+        plugin_loader.load(MutationPrunerBuilder())
+        plugin_loader.load(CallDepthLimitBuilder())
+        plugin_loader.load(InstructionProfilerBuilder())
+        plugin_loader.load(DependencyPrunerBuilder())
+        plugin_loader.add_args("call-depth-limit", call_depth_limit=call_depth_limit)
+        plugin_loader.instrument_virtual_machine(laser, None)
 
         # Run symbolic execution
         start_time = time.time()
