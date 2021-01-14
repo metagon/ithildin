@@ -9,7 +9,6 @@ import time
 from functools import lru_cache
 from typing import Optional, Set, Text, Tuple
 
-from mythril.disassembler.disassembly import Disassembly
 from mythril.support.signatures import SignatureDB
 from mythril.mythril import MythrilDisassembler
 
@@ -56,6 +55,7 @@ def lookup_signature(signature_hash: Text) -> Text:
 
 
 def save_benchmark_state(report: Report, positive_sample: Set[int], negative_sample: Set[int]) -> None:
+    log.info('Saving benchmark state to filesystem...')
     benchmark_state = {
         'report': report.to_dict(),
         'positiveSample': list(positive_sample),
@@ -83,7 +83,9 @@ def load_benchmark_state(path=benchmark_state_path) -> Tuple[Report, Set[int], S
                         start_time=benchmark_state['report'].get('startTime', None),
                         end_time=benchmark_state['report'].get('endTime', None))
         for result in benchmark_state['report']['results']:
-            report.add_result(Result(Disassembly(result['bytecode']),
+            if len(result['functionHashes']) == 0:
+                continue
+            report.add_result(Result(result['functionHashes'],
                                      result['contractAddress'],
                                      result['contractIndex'],
                                      result['detectedFunctions'],
@@ -105,6 +107,8 @@ def check_for_existing_flags(result: Result, contract: Contract, strategy: Text,
         if func_entity is None:
             continue
         flagged_funcion = flagged_function_repository.get(func_entity, strategy)
+        if flagged_funcion is None:
+            continue
         if flagged_funcion.flag == Flag.VALID:
             if func_hash in marked_func_hashes:
                 result.true_positives += 1
@@ -124,13 +128,13 @@ def check_for_existing_flags(result: Result, contract: Contract, strategy: Text,
 
 def ask_for_marked_functions(result: Result, contract: Contract, strategy: Text, existing_hashes: Set[Text]):
     for signature, sig_hash in [(sig, signature_hash(sig)) for sig in result.detected_functions if signature_hash(sig) not in existing_hashes]:
-        func_entity = function_repository.save(contract, signature, sig_hash)
         print('! Has the function "{}" been correctly identified?'.format(signature))
         answer = get_binary_answer()
         if answer:
             result.true_positives += 1
         else:
             result.false_positives += 1
+        func_entity = function_repository.save(contract, signature, sig_hash)
         flagged_function_repository.set_flag(func_entity, strategy, Flag.VALID if answer else Flag.INVALID)
 
 
@@ -138,7 +142,7 @@ def ask_for_missing_functions(result: Result, contract: Contract, strategy: Text
     if len(valid_func_hashes) == 0:
         return set()
     missing_functions = set()
-    print('! Enter signatures of missed functions one by one (type \'c\' if none are left)')
+    print('! One by one, enter all function signatures that were missed by the strategy (type \'c\' if none are left)')
     signature = input('> Signature (type \'c\' to continue): ')
     while signature != 'c':
         sig_hash = signature_hash(signature)
@@ -163,7 +167,7 @@ def start_verification(report: Report, verification_sample: Set[int]) -> None:
         if result.contract_index not in verification_sample:
             continue
         contract = contract_repository.save(result.contract_address, result.compiler_version)
-        func_hashes = set(result.disassembly.func_hashes)
+        func_hashes = set(result.function_hashes)
         marked_hashes = {signature_hash(sig) for sig in result.detected_functions}
         print('! Verifying contract at address %s' % result.contract_address)
         print('! Total functions in contract: %d' % len(func_hashes))
@@ -177,9 +181,9 @@ def start_verification(report: Report, verification_sample: Set[int]) -> None:
         missing_hashes = {signature_hash(signature) for signature in missing_functions}
         # Next, mark all remaining functions as INVALID
         for func_hash in func_hashes - marked_hashes - existing_hashes - missing_hashes:
-            signature = lookup_signature(func_hash)
             func_entity = function_repository.get(contract, signature_hash=func_hash)
             if func_entity is None:
+                signature = lookup_signature(func_hash)
                 func_entity = function_repository.save(contract, signature, func_hash)
             flagged_function_repository.set_flag(func_entity, strategy, Flag.INVALID)
             result.true_negatives += 1
@@ -244,12 +248,12 @@ def new_benchmark(args) -> None:
                 positive_instances.add(i)
             else:
                 log.info('Nothing found for contract %d/%d at address %s', i + 1, instance_count, target_address)
-            function_names = [result.function_name
-                              for report_item in analysis_report.reports if len(report_item.results) > 0
-                              for result in report_item.results]
+            detected_functions = [result.function_name
+                                  for report_item in analysis_report.reports if len(report_item.results) > 0
+                                  for result in report_item.results]
             compiler_version = row[args.version_column] if args.version_column is not None else None
-            benchmark_report.add_result(Result(contract_loader.disassembly(), target_address, i, function_names,
-                                               compiler_version=compiler_version))
+            function_hashes = contract_loader.disassembly().func_hashes if contract_loader.disassembly() else []
+            benchmark_report.add_result(Result(function_hashes, target_address, i, detected_functions, compiler_version=compiler_version))
             strategy_loader.reset_strategies()
     benchmark_report.end_time = time.strftime(TIME_FORMAT)
     negative_instances = contract_sample - positive_instances
