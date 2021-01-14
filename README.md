@@ -8,7 +8,7 @@
 
 > Ithildin was a type of specially crafted Mithril that only the most experienced craftsmen of the Noldor could learn how to make and pass on to others.
 
-Ithilding is a semantic analysis tool for EVM bytecode based on [Mythril](https://github.com/ConsenSys/mythril).
+Ithildin is a semantic analysis tool for EVM bytecode based on [Mythril](https://github.com/ConsenSys/mythril).
 By using symbolic execution and taint analysis, it aims at detecting functions that are restricted by authentication patterns, and to extract administrator addresses whenever possible.
 
 Check out the wiki for a list of currently working patterns and some that are planned to be implemented soon.
