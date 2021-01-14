@@ -1,7 +1,7 @@
 import pathlib
 from setuptools import find_packages, setup
 
-VERSION = '0.1.5'
+VERSION = '0.1.6'
 CURRENT_DIR = pathlib.Path(__file__).parent
 README = (CURRENT_DIR / 'README.md').read_text()
 PYTHON_REQUIREMENT = '>=3.6.0'
