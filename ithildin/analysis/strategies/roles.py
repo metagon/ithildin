@@ -1,5 +1,6 @@
 import codecs
 import logging
+import re
 
 from ethereum import utils
 from typing import Optional
@@ -95,16 +96,17 @@ class RoleBasedAccessControl(AnalysisStrategy):
             # Check if there are annotations for concrete values to be forwarded
             self._sha3_preprocess(state)
         elif state.instruction['opcode'] == 'JUMPI' and {HashedCaller(), HashedRole()}.issubset(state.mstate.stack[-2].annotations):
+            self.concrete_memory_cache.clear()
+            result = Result(state.environment.active_function_name)
             if state.environment.active_function_name in self.role_cache:
                 role_raw = self.role_cache[state.environment.active_function_name]
                 role_hex = hex(role_raw)
                 role_bytes = codecs.decode(role_hex[2:], 'hex')
-                role_string = role_bytes.decode('ascii', 'replace')
-                log.info('Hex: %s', role_hex)
-                log.info('String: %s', role_string)
+                role_ascii = re.sub(r'[^\x00\x20-\x7E]', '?', role_bytes.decode('ascii', 'replace'))
+                result.add_attribute('Role Hex', role_hex)
+                result.add_attribute('Role ASCII', role_ascii)
                 del self.role_cache[state.environment.active_function_name]
-            self.concrete_memory_cache.clear()
-            return Result(state.environment.active_function_name)
+            return result
 
     def _jumpdest_preprocess(self, state: GlobalState):
         """
@@ -159,7 +161,7 @@ class RoleBasedAccessControl(AnalysisStrategy):
         lo = state.mstate.stack[-1].value
         hi = state.mstate.stack[-2].value
         if hi - lo < word_len:
-            return None
+            return
         for i in range(lo, hi, word_len):
             data_list = [
                 b if isinstance(b, BitVec) else symbol_factory.BitVecVal(b, 8)

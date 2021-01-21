@@ -61,7 +61,7 @@ class Ownership(AnalysisStrategy):
                 state.mstate.stack[-2].annotate(Equality(Actor.OWNER))
         elif state.instruction['opcode'] == 'JUMPI' and self._is_target_jumpi(state):
             storage_address = self._retrieve_storage_address(state.mstate.stack[-2])
-            return Result(state.environment.active_function_name, storage_address=storage_address)
+            return Result(state.environment.active_function_name, _index_owner=storage_address)
 
         return None
 

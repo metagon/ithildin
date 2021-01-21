@@ -98,9 +98,10 @@ class LaserWrapper:
         return report
 
     def _post_process_report(self, report: Report, target_address: Text, dyn_loader: DynLoader) -> None:
-        if dyn_loader is None or target_address is None:
-            return
-        for report_item in report.reports:
-            for result in report_item.results:
-                if result.storage_address is not None:
-                    result.storage_content = dyn_loader.read_storage(target_address, result.storage_address)
+        for result in [result for report_item in report.reports for result in report_item.results]:
+            for attr_name, attr_value in [(k, v) for k, v in result.attributes.items() if k.startswith('_index')]:
+                attr_name_pretty = ' '.join(map(lambda s: s.capitalize(), attr_name.split('_')[2:]))
+                result.add_attribute(f'{attr_name_pretty} Storage Index', attr_value)
+                if dyn_loader:
+                    result.add_attribute(attr_name_pretty, dyn_loader.read_storage(target_address, attr_value))
+                result.remove_attribute(attr_name)
