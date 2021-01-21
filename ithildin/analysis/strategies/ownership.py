@@ -1,13 +1,11 @@
 from enum import Enum
 from typing import Optional
+
 from mythril.laser.ethereum.state.global_state import GlobalState
 from mythril.laser.smt.bitvec import BitVec
 
 from ithildin.analysis.base import AnalysisStrategy
 from ithildin.report.analysis import Result
-
-import logging
-log = logging.getLogger(__name__)
 
 
 class Actor(Enum):
