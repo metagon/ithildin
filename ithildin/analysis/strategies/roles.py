@@ -1,3 +1,4 @@
+import codecs
 import logging
 
 from ethereum import utils
@@ -36,9 +37,6 @@ class HashedCaller():
 class Role:
     """Role annotation. """
 
-    def __init__(self, value=None):
-        self.value = value
-
     def __eq__(self, other: 'Role'):
         return isinstance(other, Role)
 
@@ -46,7 +44,7 @@ class Role:
         return hash(type(self))
 
 
-class HashedRole(Role):
+class HashedRole:
     """Annotation to be used for Role elements that were hashed for lookup. """
 
     def __eq__(self, other: 'HashedRole'):
@@ -67,7 +65,14 @@ class RoleBasedAccessControl(AnalysisStrategy):
 
     def __init__(self):
         super().__init__()
-        self.forward_next = None
+        self.sha3_should_forward = False
+        self.role_cache = {}
+        self.concrete_memory_cache = set()
+
+    def reset(self) -> None:
+        super().reset()
+        self.sha3_should_forward = False
+        self.role_cache = {}
         self.concrete_memory_cache = set()
 
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
@@ -90,21 +95,27 @@ class RoleBasedAccessControl(AnalysisStrategy):
             # Check if there are annotations for concrete values to be forwarded
             self._sha3_preprocess(state)
         elif state.instruction['opcode'] == 'JUMPI' and {HashedCaller(), HashedRole()}.issubset(state.mstate.stack[-2].annotations):
-            value = self._retrieve_value(state.mstate.stack[-2].annotations)
-            if value is not None:
-                log.info('Value = %s', hex(value))
+            if state.environment.active_function_name in self.role_cache:
+                role_raw = self.role_cache[state.environment.active_function_name]
+                role_hex = hex(role_raw)
+                role_bytes = codecs.decode(role_hex[2:], 'hex')
+                role_string = role_bytes.decode('ascii', 'replace')
+                log.info('Hex: %s', role_hex)
+                log.info('String: %s', role_string)
+                del self.role_cache[state.environment.active_function_name]
             self.concrete_memory_cache.clear()
             return Result(state.environment.active_function_name)
 
     def _jumpdest_preprocess(self, state: GlobalState):
         """
-        When the JUMPDEST opcode is present it may indicate the start of a function. Since we aim at
+        When the JUMPDEST opcode is present it may indicate the beginning of a function. Since we aim at
         detecting the function that checks wether an address has a specific role assigned, we first check
         if at least two elements are present in the stack. If that's the case, we continue with checking
         if either the top or second element in the stack is annotated with *Caller*. In that case,
         we assume that the opposite element is the role, and annotate that accordingly. In case the role
-        element is concrete, we mark it in the memory cache for later, because annotations do not survive
-        memory reads/writes in that case.
+        element is concrete, we mark it in the memory cache for later because annotations do not survive
+        memory reads/writes in that case. We also memorize the role value (if concrete) in the *role_cache*
+        dictionary the first time we encounter it inside the current function.
         """
         if len(state.mstate.stack) <= 1:
             return
@@ -113,11 +124,15 @@ class RoleBasedAccessControl(AnalysisStrategy):
                 state.mstate.stack[-2].annotate(Role())
             else:
                 self.concrete_memory_cache.add(state.mstate.stack[-2].value)
+                if state.environment.active_function_name not in self.role_cache:
+                    self.role_cache[state.environment.active_function_name] = state.mstate.stack[-2].value
         elif Caller() in state.mstate.stack[-2].annotations:
             if state.mstate.stack[-1].symbolic:
                 state.mstate.stack[-1].annotate(Role())
             else:
                 self.concrete_memory_cache.add(state.mstate.stack[-1].value)
+                if state.environment.active_function_name not in self.role_cache:
+                    self.role_cache[state.environment.active_function_name] = state.mstate.stack[-1].value
 
     def _sha3_preprocess(self, state: GlobalState):
         """
@@ -141,27 +156,26 @@ class RoleBasedAccessControl(AnalysisStrategy):
             ]
             data = simplify(Concat(data_list))
             if data.symbolic is False and data.value in self.concrete_memory_cache:
-                self.forward_next = data.value
+                self.sha3_should_forward = True
                 self.concrete_memory_cache.remove(data.value)
 
     def _sha3_postprocess(self, state: GlobalState):
         """
         Helper function for forwarding annotations after the SHA3 operation has executed.
-        It first checks if the *forward_next* variable has any value, which indicates that a
-        concrete value has been hashed. In that case we forward the *HashedRole* annotation
-        together with said value.
+        It first checks if the *sha3_should_forward* variable has been set to True, which
+        indicates that a concrete value has been hashed. In that case we annotate the hashed
+        element with the *HashedRole* annotation.
 
         In case the hashed element is not concrete, we forward *HashedRole* and *HashedCaller*
         for elements that have been annotated with *Role* and *Caller* respectively.
         """
-        if self.forward_next is not None:
-            state.mstate.stack[-1].annotate(HashedRole(self.forward_next))
-            self.forward_next = None
+        if self.sha3_should_forward:
+            state.mstate.stack[-1].annotate(HashedRole())
+            self.sha3_should_forward = False
             if state.mstate.stack[-1].symbolic is False:
                 self.concrete_memory_cache.add(state.mstate.stack[-1].value)
         if Role() in state.mstate.stack[-1].annotations:
-            value = self._retrieve_value(state.mstate.stack[-1].annotations)
-            state.mstate.stack[-1].annotate(HashedRole(value))
+            state.mstate.stack[-1].annotate(HashedRole())
         if Caller() in state.mstate.stack[-1].annotations:
             state.mstate.stack[-1].annotate(HashedCaller())
 
@@ -184,11 +198,5 @@ class RoleBasedAccessControl(AnalysisStrategy):
         they wouldn't be forwarded otherwise.
         """
         if {HashedCaller(), HashedRole()}.issubset(prev_state.mstate.stack[-1].annotations):
-            value = self._retrieve_value(prev_state.mstate.stack[-1].annotations)
             state.mstate.stack[-1].annotate(HashedCaller())
-            state.mstate.stack[-1].annotate(HashedRole(value))
-
-    def _retrieve_value(self, annotations: set):
-        for annotation in annotations:
-            if isinstance(annotation, Role):
-                return annotation.value
+            state.mstate.stack[-1].annotate(HashedRole())
