@@ -5,25 +5,31 @@ from typing import Dict, List, Optional, Text
 
 class Result:
 
-    def __init__(self, function_name: Text, storage_address: Optional[int] = None, storage_content: Optional[Text] = None) -> None:
+    def __init__(self, function_name: Text, **attributes) -> None:
         self.function_name = function_name
-        self.storage_address = storage_address
-        self.storage_content = storage_content
+        self.attributes = {}
+        for attr_key, attr_value in attributes.items():
+            self.attributes[attr_key] = attr_value
+
+    def add_attribute(self, name: str, value: str):
+        assert name not in self.attributes, f'Attribute with name \'{name}\' already exists'
+        self.attributes[name] = value
+
+    def remove_attribute(self, name: str):
+        if name in self.attributes:
+            del self.attributes[name]
 
     def to_dict(self) -> Dict:
-        as_dict = {'functionName': self.function_name}
-        if self.storage_address is not None:
-            as_dict['storageAddress'] = self.storage_address
-        if self.storage_content is not None:
-            as_dict['storageContent'] = self.storage_content
-        return as_dict
+        return {
+            'functionName': self.function_name,
+            'attributes': self.attributes
+        }
 
     def __repr__(self):
         return (
             '<Result '
             'function_name={0.function_name} '
-            'storage_address={0.storage_address} '
-            'storage_content={0.storage_content}'
+            'attributes={0.attributes}'
             '>'
         ).format(self)
 

@@ -2,12 +2,14 @@ from typing import List
 
 from .base import AnalysisStrategy
 from .strategies.ownership import Ownership
+from .strategies.roles import RoleBasedAccessControl
 from .strategies.x_confirmation import XConfirmation
 
 from ithildin.support.singleton import Singleton
 
 STRATEGIES = {
     'OWNERSHIP': Ownership,
+    'ROLES': RoleBasedAccessControl,
     'X_CONFIRMATION': XConfirmation
 }
 

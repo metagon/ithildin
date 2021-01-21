@@ -21,13 +21,10 @@ Contract Address: {{ report.contract_address }}
 {{ report_item.description | wordwrap }}
 {{ '~' * 80 }}
 {% for result in report_item.results %}
-Function Name: {{ result.function_name }}
-{% if result.storage_address is not none %}
-Storage Address: {{ result.storage_address }}
-{% endif %}
-{% if result.storage_content %}
-Storage Content: {{ result.storage_content }}
-{% endif %}
+{{ loop.index }}. {{ result.function_name }}
+{% for attribute_name, attribute_value in result.attributes.items() %}
+- {{ attribute_name }}: {{ attribute_value }}
+{% endfor %}
 
 {% endfor %}
 {% endfor %}
