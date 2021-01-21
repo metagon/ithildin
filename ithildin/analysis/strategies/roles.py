@@ -60,7 +60,7 @@ class RoleBasedAccessControl(AnalysisStrategy):
     report_title = 'Role Based Access Control'
     report_description = ('TODO')
 
-    pre_hooks = ['ADD', 'JUMPDEST', 'JUMPI', 'SHA3']
+    pre_hooks = ['JUMPDEST', 'JUMPI', 'MSTORE', 'SHA3']
     post_hooks = ['CALLER', 'SHA3', 'SLOAD']
 
     def __init__(self):
@@ -88,9 +88,9 @@ class RoleBasedAccessControl(AnalysisStrategy):
         if state.instruction['opcode'] == 'JUMPDEST':
             # Function entrypoint operations
             self._jumpdest_preprocess(state)
-        elif state.instruction['opcode'] == 'ADD':
-            # Update concrete memory cache elements
-            self._add_preprocess(state)
+        elif state.instruction['opcode'] == 'MSTORE':
+            # Memorize values before being stored to propagate annotations later
+            self._mstore_preprocess(state)
         elif state.instruction['opcode'] == 'SHA3':
             # Check if there are annotations for concrete values to be forwarded
             self._sha3_preprocess(state)
@@ -111,28 +111,39 @@ class RoleBasedAccessControl(AnalysisStrategy):
         When the JUMPDEST opcode is present it may indicate the beginning of a function. Since we aim at
         detecting the function that checks wether an address has a specific role assigned, we first check
         if at least two elements are present in the stack. If that's the case, we continue with checking
-        if either the top or second element in the stack is annotated with *Caller*. In that case,
-        we assume that the opposite element is the role, and annotate that accordingly. In case the role
-        element is concrete, we mark it in the memory cache for later because annotations do not survive
-        memory reads/writes in that case. We also memorize the role value (if concrete) in the *role_cache*
-        dictionary the first time we encounter it inside the current function.
+        if either the top or second element in the stack is annotated with *Caller*. In which case,
+        we assume that the opposite element is the role, and annotate that accordingly. We also memorize
+        the role value (if concrete) in the *role_cache* dictionary the first time we encounter it inside
+        the current function.
         """
         if len(state.mstate.stack) <= 1:
             return
+
+        role_bitvec = None
         if Caller() in state.mstate.stack[-1].annotations:
-            if state.mstate.stack[-2].symbolic:
-                state.mstate.stack[-2].annotate(Role())
-            else:
-                self.concrete_memory_cache.add(state.mstate.stack[-2].value)
-                if state.environment.active_function_name not in self.role_cache:
-                    self.role_cache[state.environment.active_function_name] = state.mstate.stack[-2].value
+            role_bitvec = state.mstate.stack[-2]
         elif Caller() in state.mstate.stack[-2].annotations:
-            if state.mstate.stack[-1].symbolic:
-                state.mstate.stack[-1].annotate(Role())
-            else:
-                self.concrete_memory_cache.add(state.mstate.stack[-1].value)
-                if state.environment.active_function_name not in self.role_cache:
-                    self.role_cache[state.environment.active_function_name] = state.mstate.stack[-1].value
+            role_bitvec = state.mstate.stack[-1]
+
+        if role_bitvec is not None:
+            role_bitvec.annotate(Role())
+            if role_bitvec.symbolic is False and state.environment.active_function_name not in self.role_cache:
+                self.role_cache[state.environment.active_function_name] = role_bitvec.value
+
+    def _mstore_preprocess(self, state: GlobalState):
+        """
+        A flaw in mythril doesn't allow annotations of concrete values to propagate after
+        being written in memory because only their concrete bytes get stored (not bit vectors
+        which include the annotations). We therefore need to memorize the value before being
+        stored in memory and manually propagate them later.
+
+        Sometimes more complicated data structures are used to store role elements and the
+        lookup addresses get altered, e.g. through ADD, and stored in memory before being
+        hashed. We memorize the value in the cache before something gets stored in memory,
+        so that the annotations can later get forwarded when a SHA3 operation takes place.
+        """
+        if {Role(), HashedRole()} & state.mstate.stack[-2].annotations:
+            self.concrete_memory_cache.add(state.mstate.stack[-2].value)
 
     def _sha3_preprocess(self, state: GlobalState):
         """
@@ -178,18 +189,6 @@ class RoleBasedAccessControl(AnalysisStrategy):
             state.mstate.stack[-1].annotate(HashedRole())
         if Caller() in state.mstate.stack[-1].annotations:
             state.mstate.stack[-1].annotate(HashedCaller())
-
-    def _add_preprocess(self, state: GlobalState):
-        """
-        Sometimes role elements are stored in structs and we need to update the cached memory
-        elements to reflect the index in those structs.
-        """
-        if {Role(), HashedRole()} & state.mstate.stack[-1].annotations:
-            inc = state.mstate.stack[-2].value
-            self.concrete_memory_cache = {v + inc for v in self.concrete_memory_cache}
-        elif {Role(), HashedRole()} & state.mstate.stack[-2].annotations:
-            inc = state.mstate.stack[-1].value
-            self.concrete_memory_cache = {v + inc for v in self.concrete_memory_cache}
 
     def _sload_postprocess(self, state: GlobalState, prev_state: GlobalState):
         """
