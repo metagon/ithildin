@@ -29,8 +29,6 @@ class Result:
         return (
             '<Result '
             'function_name={0.function_name} '
-            'storage_address={0.storage_address} '
-            'storage_content={0.storage_content} '
             'attributes={0.attributes}'
             '>'
         ).format(self)

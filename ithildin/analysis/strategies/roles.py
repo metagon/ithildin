@@ -59,7 +59,10 @@ class RoleBasedAccessControl(AnalysisStrategy):
 
     pattern_name = 'ROLES'
     report_title = 'Role Based Access Control'
-    report_description = ('TODO')
+    report_description = ('This patterns aims at restricting function execution to addresses that belong to a specific role group. '
+                          'The addresses are added to a role goup, usually by an account with elevated priviliges (an admin), and when a '
+                          'restricted function is called the address is first looked up in the respective collection before allowing the '
+                          'caller to continue with the execution. Works well with OpenZeppelin\'s AccessControl library.')
 
     pre_hooks = ['JUMPDEST', 'JUMPI', 'MSTORE', 'SHA3']
     post_hooks = ['CALLER', 'SHA3', 'SLOAD']
