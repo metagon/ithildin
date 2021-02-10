@@ -92,7 +92,7 @@ class RoleBasedAccessControl(AnalysisStrategy):
         if state.instruction['opcode'] == 'JUMPDEST':
             # Function entrypoint operations
             self._jumpdest_preprocess(state)
-        elif state.instruction['opcode'] == 'MSTORE':
+        elif state.instruction['opcode'] == 'MSTORE' and state.mstate.stack[-2].symbolic is False:
             # Memorize values before being stored to propagate annotations later
             self._mstore_preprocess(state)
         elif state.instruction['opcode'] == 'SHA3':
