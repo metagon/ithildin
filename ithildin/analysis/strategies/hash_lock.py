@@ -27,6 +27,16 @@ class HashedInput:
         return isinstance(other, HashedInput)
 
 
+class HashedInputEq:
+    """ Annotation to be used whenever the hashed input is involved in an equality operation. """
+
+    def __hash__(self):
+        return hash(type(self))
+
+    def __eq__(self, other):
+        return isinstance(other, HashedInputEq)
+
+
 class HashedStorage:
     """ Annotation to be used on SLOAD elements, where the lookup key has been hashed. """
 
@@ -47,7 +57,7 @@ class HashLock(AnalysisStrategy):
                           'the secret\'s hash against the stored one, and if they match the protected logic gets executed.')
 
     pre_hooks = ['JUMPI']
-    post_hooks = ['CALLDATALOAD', 'SHA3', 'SLOAD']
+    post_hooks = ['CALLDATALOAD', 'SHA3', 'SLOAD', 'EQ', ]
 
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
         if prev_state and prev_state.instruction['opcode'] == 'CALLDATALOAD':
@@ -63,8 +73,14 @@ class HashLock(AnalysisStrategy):
         elif prev_state and prev_state.instruction['opcode'] == 'SLOAD' and \
                 HashedInput() in prev_state.mstate.stack[-1].annotations:
             state.mstate.stack[-1].annotate(HashedStorage())
+        elif prev_state and prev_state.instruction['opcode'] == 'EQ' and \
+                HashedInput() in state.mstate.stack[-1].annotations:
+            # We add a distinct annotation whenever the hashed input is compared to something through equality.
+            # This allows the analysis strategy to detect instances of the HashLock pattern when the secret hash
+            # is not stored in a datastructure like a mapping.
+            state.mstate.stack[-1].annotate(HashedInputEq())
 
-        if state.instruction['opcode'] == 'JUMPI' and HashedStorage() in state.mstate.stack[-2].annotations:
+        if state.instruction['opcode'] == 'JUMPI' and {HashedStorage(), HashedInputEq()} & state.mstate.stack[-2].annotations:
             return Result(state.environment.active_function_name)
 
         return None
