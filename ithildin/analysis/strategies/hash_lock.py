@@ -37,6 +37,19 @@ class HashedInputEq:
         return isinstance(other, HashedInputEq)
 
 
+class Storage:
+    """ Annotation to be used whenever something gets loaded from storage. """
+
+    def __init__(self, index):
+        self.index = index
+
+    def __hash__(self):
+        return hash((type(self), self.index))
+
+    def __eq__(self, other):
+        return self.index == other.index
+
+
 class HashedStorage:
     """ Annotation to be used on SLOAD elements, where the lookup key has been hashed. """
 
@@ -70,9 +83,13 @@ class HashLock(AnalysisStrategy):
             # since the key will always be larger than 32 bytes.
             state.mstate.stack[-1].annotate(HashedInput())
             state.mstate.stack[-1].annotations.discard(Input())
-        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD' and \
-                HashedInput() in prev_state.mstate.stack[-1].annotations:
-            state.mstate.stack[-1].annotate(HashedStorage())
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
+            # If the index is concrete, annotate the secret hash with the Storage taint, together with its index.
+            if prev_state.mstate.stack[-1].symbolic is False:
+                state.mstate.stack[-1].annotate(Storage(prev_state.mstate.stack[-1].value))
+            # Annotate the value with the HashedStorage taint if the lookup key has been tainted with HashedInput.
+            if HashedInput() in prev_state.mstate.stack[-1].annotations:
+                state.mstate.stack[-1].annotate(HashedStorage())
         elif prev_state and prev_state.instruction['opcode'] == 'EQ' and \
                 HashedInput() in state.mstate.stack[-1].annotations:
             # We add a distinct annotation whenever the hashed input is compared to something through equality.
@@ -81,6 +98,16 @@ class HashLock(AnalysisStrategy):
             state.mstate.stack[-1].annotate(HashedInputEq())
 
         if state.instruction['opcode'] == 'JUMPI' and {HashedStorage(), HashedInputEq()} & state.mstate.stack[-2].annotations:
-            return Result(state.environment.active_function_name)
+            result = Result(state.environment.active_function_name)
+            if self._has_annotation(state.mstate.stack[-2], Storage):
+                index = self._retrieve_storage_index(state.mstate.stack[-2])
+                result.add_attribute('_index_secret_hash', index)
+            return result
 
+        return None
+
+    def _retrieve_storage_index(self, bitvec) -> Optional[int]:
+        for taint in bitvec.annotations:
+            if isinstance(taint, Storage):
+                return taint.index
         return None
