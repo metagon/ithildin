@@ -188,8 +188,6 @@ class RoleBasedAccessControl(AnalysisStrategy):
         if self.sha3_should_forward:
             state.mstate.stack[-1].annotate(HashedRole())
             self.sha3_should_forward = False
-            if state.mstate.stack[-1].symbolic is False:
-                self.concrete_memory_cache.add(state.mstate.stack[-1].value)
         if Role() in state.mstate.stack[-1].annotations:
             state.mstate.stack[-1].annotate(HashedRole())
         if Caller() in state.mstate.stack[-1].annotations:
