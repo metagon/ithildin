@@ -1,6 +1,7 @@
 from typing import List
 
 from .base import AnalysisStrategy
+from .strategies.hash_lock import HashLock
 from .strategies.ownership import Ownership
 from .strategies.roles import RoleBasedAccessControl
 from .strategies.x_confirmation import XConfirmation
@@ -8,6 +9,7 @@ from .strategies.x_confirmation import XConfirmation
 from ithildin.support.singleton import Singleton
 
 STRATEGIES = {
+    'HASH_LOCK': HashLock,
     'OWNERSHIP': Ownership,
     'ROLES': RoleBasedAccessControl,
     'X_CONFIRMATION': XConfirmation
