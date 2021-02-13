@@ -70,7 +70,7 @@ class HashLock(AnalysisStrategy):
                           'the secret\'s hash against the stored one, and if they match the protected logic gets executed.')
 
     pre_hooks = ['JUMPI']
-    post_hooks = ['CALLDATALOAD', 'SHA3', 'SLOAD', 'EQ', ]
+    post_hooks = ['CALLDATALOAD', 'SHA3', 'SLOAD', 'EQ']
 
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
         if prev_state and prev_state.instruction['opcode'] == 'CALLDATALOAD':
