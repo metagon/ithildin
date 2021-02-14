@@ -45,7 +45,7 @@ class AnalysisStrategy(ABC):
         if state.environment.active_function_name in self.cache:
             return None
         log.debug('Executing analysis strategy %s', type(self).__name__)
-        result = self._analyze(state, state.node.states[-1] if len(state.node.states) > 0 else None)
+        result = self._analyze(state, state.node.states[-1] if len(state.node.states) > 1 else None)
         if result is not None:
             log.info('Analysis strategy %s got a hit in function %s', type(self).__name__, result.function_name)
             self.results.append(result)

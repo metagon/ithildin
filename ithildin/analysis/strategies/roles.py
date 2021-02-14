@@ -80,12 +80,12 @@ class RoleBasedAccessControl(AnalysisStrategy):
         self.concrete_memory_cache = set()
 
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
-        if prev_state.instruction['opcode'] == 'CALLER':
+        if prev_state and prev_state.instruction['opcode'] == 'CALLER':
             state.mstate.stack[-1].annotate(Caller())
-        elif prev_state.instruction['opcode'] == 'SHA3':
+        elif prev_state and prev_state.instruction['opcode'] == 'SHA3':
             # Forward annotations for concrete and symbolic values
             self._sha3_postprocess(state)
-        elif prev_state.instruction['opcode'] == 'SLOAD':
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
             # Forward annotations
             self._sload_postprocess(state, prev_state)
 
@@ -162,7 +162,7 @@ class RoleBasedAccessControl(AnalysisStrategy):
         """
         word_len = 32
         lo = state.mstate.stack[-1].value
-        hi = state.mstate.stack[-2].value
+        hi = lo + state.mstate.stack[-2].value
         if hi - lo < word_len:
             return
         for i in range(lo, hi, word_len):
