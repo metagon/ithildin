@@ -2,11 +2,9 @@ import codecs
 import logging
 import re
 
-from ethereum import utils
 from typing import Optional
 
 from mythril.laser.smt import symbol_factory, simplify, BitVec, Concat
-from mythril.laser.ethereum.keccak_function_manager import keccak_function_manager
 from mythril.laser.ethereum.state.global_state import GlobalState
 
 from ithildin.analysis.base import AnalysisStrategy

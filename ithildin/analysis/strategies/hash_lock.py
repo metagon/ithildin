@@ -1,5 +1,3 @@
-import logging
-
 from typing import Optional
 from mythril.laser.ethereum.state.global_state import GlobalState
 
