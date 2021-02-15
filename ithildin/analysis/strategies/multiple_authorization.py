@@ -35,7 +35,14 @@ class MultipleAuthorization(AnalysisStrategy):
 
     pattern_name = 'MULTIPLE_AUTHORIZATION'
     report_title = 'Multiple Authorization'
-    report_description = 'TODO'
+    report_description = ('Multiple Authorization is an access control pattern that aims at restricting a code segment '
+                          'that can only be accessed when enough signatures are present. This means that enough stakeholders '
+                          'have to authorize the action before the function\'s execution can proceed. Identifying this pattern '
+                          'is not trivial, and this strategy may thus lead to false positives.\n' + ('. ' * 40) + '\n'
+                          '! How to interpret the results:\n'
+                          'The restricted function along with two parameters will be presented below. If it is indeed the case '
+                          'of a Multi-Authorization instance, one of the two parameters will represent the amount of signatures '
+                          'that have been gathered and the other one will represent the threshold required for authorizing an action.')
 
     pre_hooks = ['JUMPI', 'SSTORE']
     post_hooks = ['SLOAD', 'LT', 'GT']
@@ -56,8 +63,9 @@ class MultipleAuthorization(AnalysisStrategy):
         if state.instruction['opcode'] == 'JUMPI':
             s1_comp = self._retrieve_taint(state.mstate.stack[-2], Comparison)
             if s1_comp is not None:
-                return Result(state.environment.active_function_name)
-
+                return Result(state.environment.active_function_name,
+                              _index_param_x=s1_comp.index_x,
+                              _index_param_y=s1_comp.index_y)
         return None
 
     def _retrieve_taint(self, bitvec: BitVec, taint_type: Type):
