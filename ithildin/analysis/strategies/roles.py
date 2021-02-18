@@ -2,11 +2,9 @@ import codecs
 import logging
 import re
 
-from ethereum import utils
 from typing import Optional
 
 from mythril.laser.smt import symbol_factory, simplify, BitVec, Concat
-from mythril.laser.ethereum.keccak_function_manager import keccak_function_manager
 from mythril.laser.ethereum.state.global_state import GlobalState
 
 from ithildin.analysis.base import AnalysisStrategy
@@ -80,19 +78,19 @@ class RoleBasedAccessControl(AnalysisStrategy):
         self.concrete_memory_cache = set()
 
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
-        if prev_state.instruction['opcode'] == 'CALLER':
+        if prev_state and prev_state.instruction['opcode'] == 'CALLER':
             state.mstate.stack[-1].annotate(Caller())
-        elif prev_state.instruction['opcode'] == 'SHA3':
+        elif prev_state and prev_state.instruction['opcode'] == 'SHA3':
             # Forward annotations for concrete and symbolic values
             self._sha3_postprocess(state)
-        elif prev_state.instruction['opcode'] == 'SLOAD':
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
             # Forward annotations
             self._sload_postprocess(state, prev_state)
 
         if state.instruction['opcode'] == 'JUMPDEST':
             # Function entrypoint operations
             self._jumpdest_preprocess(state)
-        elif state.instruction['opcode'] == 'MSTORE':
+        elif state.instruction['opcode'] == 'MSTORE' and state.mstate.stack[-2].symbolic is False:
             # Memorize values before being stored to propagate annotations later
             self._mstore_preprocess(state)
         elif state.instruction['opcode'] == 'SHA3':
@@ -162,7 +160,7 @@ class RoleBasedAccessControl(AnalysisStrategy):
         """
         word_len = 32
         lo = state.mstate.stack[-1].value
-        hi = state.mstate.stack[-2].value
+        hi = lo + state.mstate.stack[-2].value
         if hi - lo < word_len:
             return
         for i in range(lo, hi, word_len):
@@ -188,8 +186,6 @@ class RoleBasedAccessControl(AnalysisStrategy):
         if self.sha3_should_forward:
             state.mstate.stack[-1].annotate(HashedRole())
             self.sha3_should_forward = False
-            if state.mstate.stack[-1].symbolic is False:
-                self.concrete_memory_cache.add(state.mstate.stack[-1].value)
         if Role() in state.mstate.stack[-1].annotations:
             state.mstate.stack[-1].annotate(HashedRole())
         if Caller() in state.mstate.stack[-1].annotations:

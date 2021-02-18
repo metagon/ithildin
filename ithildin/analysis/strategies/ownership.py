@@ -15,7 +15,12 @@ class Actor(Enum):
 
 class Caller:
     """ Class to be used as annotation for CALLER elements. """
-    ...
+
+    def __hash__(self):
+        return hash(type(self))
+
+    def __eq__(self, other: 'Caller'):
+        return isinstance(other, Caller)
 
 
 class Storage:
@@ -24,12 +29,24 @@ class Storage:
     def __init__(self, storage_address: Optional[int] = None):
         self.storage_address = storage_address
 
+    def __hash__(self):
+        return hash((type(self), self.storage_address))
+
+    def __eq__(self, other: 'Storage'):
+        return self.storage_address == other.storage_address
+
 
 class Equality:
     """ Class to be used as annotation for EQ elements. """
 
     def __init__(self, actor: Actor):
         self.actor = actor
+
+    def __hash__(self):
+        return hash((type(self), self.actor))
+
+    def __eq__(self, other: 'Equality'):
+        return self.actor == other.actor
 
 
 class Ownership(AnalysisStrategy):
@@ -46,17 +63,21 @@ class Ownership(AnalysisStrategy):
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
         if prev_state and prev_state.instruction['opcode'] == 'CALLER':
             state.mstate.stack[-1].annotate(Caller())
-        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD':
-            state.mstate.stack[-1].annotate(Storage(prev_state.mstate.stack[-1].value))
+        elif prev_state and prev_state.instruction['opcode'] == 'SLOAD' and prev_state.mstate.stack[-1].symbolic is False:
+            index = prev_state.mstate.stack[-1].value
+            if index < 0x100000000:
+                # Restrict memorizing storage keys that result from some sort of hashing by
+                # assuming that no contract would ever have 2^32 storage variables LOL.
+                state.mstate.stack[-1].annotate(Storage(index))
 
         if state.instruction['opcode'] == 'EQ':
             # Check if both top stack elemnts have been annotated with Caller and Storage,
             # in which case we annotate both elements with the Equality annotation, and
             # their respective actors.
-            if self._has_annotation(state.mstate.stack[-1], Storage) and self._has_annotation(state.mstate.stack[-2], Caller):
+            if self._has_annotation(state.mstate.stack[-1], Storage) and Caller() in state.mstate.stack[-2].annotations:
                 state.mstate.stack[-1].annotate(Equality(Actor.OWNER))
                 state.mstate.stack[-2].annotate(Equality(Actor.SENDER))
-            elif self._has_annotation(state.mstate.stack[-1], Caller) and self._has_annotation(state.mstate.stack[-2], Storage):
+            elif Caller() in state.mstate.stack[-1].annotations and self._has_annotation(state.mstate.stack[-2], Storage):
                 state.mstate.stack[-1].annotate(Equality(Actor.SENDER))
                 state.mstate.stack[-2].annotate(Equality(Actor.OWNER))
         elif state.instruction['opcode'] == 'JUMPI' and self._is_target_jumpi(state):
@@ -74,12 +95,7 @@ class Ownership(AnalysisStrategy):
         True if the second stack element contains two annotations of type Equality with attributes
         'owner' and 'sender', False otherwise.
         """
-        actor_flags = 0b00
-        for annotation in state.mstate.stack[-2].annotations:
-            if isinstance(annotation, Equality):
-                actor_flags |= 0b01 if annotation.actor == Actor.OWNER else 0
-                actor_flags |= 0b10 if annotation.actor == Actor.SENDER else 0
-        return actor_flags == 0b11
+        return {Equality(Actor.OWNER), Equality(Actor.SENDER)}.issubset(state.mstate.stack[-2].annotations)
 
     def _retrieve_storage_address(self, bitvec: BitVec) -> Optional[int]:
         """ Helper function to retrieve the *storage_address* attribute from a BitVec instance. """

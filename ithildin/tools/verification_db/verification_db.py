@@ -91,7 +91,6 @@ class FlaggedFunction(Base):
             '<FlaggedFunction '
             'function_id={0.function_id} '
             'strategy_id={0.strategy_id} '
-            'strategy_id={0.strategy_id} '
             'flag={0.flag} '
             'function={0.function} '
             'strategy={0.strategy}'
