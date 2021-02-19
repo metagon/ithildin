@@ -16,7 +16,7 @@ from mythril.laser.plugin.plugins import (
     MutationPrunerBuilder,
     DependencyPrunerBuilder,
     CoveragePluginBuilder,
-    CallDepthLimitBuilder,
+    # CallDepthLimitBuilder,
     InstructionProfilerBuilder,
 )
 
@@ -75,10 +75,11 @@ class LaserWrapper:
         plugin_loader = LaserPluginLoader()
         plugin_loader.load(CoveragePluginBuilder())
         plugin_loader.load(MutationPrunerBuilder())
-        plugin_loader.load(CallDepthLimitBuilder())
+        # Temporarily disabled due to unhandled exception
+        # plugin_loader.load(CallDepthLimitBuilder())
         plugin_loader.load(InstructionProfilerBuilder())
         plugin_loader.load(DependencyPrunerBuilder())
-        plugin_loader.add_args("call-depth-limit", call_depth_limit=call_depth_limit)
+        # plugin_loader.add_args("call-depth-limit", call_depth_limit=call_depth_limit)
         plugin_loader.instrument_virtual_machine(laser, None)
 
         # Run symbolic execution
