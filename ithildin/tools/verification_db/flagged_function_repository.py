@@ -19,7 +19,7 @@ class FlaggedFunctionRepository:
         else:
             strategy_filter = Strategy.name == strategy
 
-        return self.db.session.query(FlaggedFunction).filter(function_filter & strategy_filter).first()
+        return self.db.session.query(FlaggedFunction).join(Function).join(Strategy).filter(function_filter, strategy_filter).first()
 
     def get_flag(self, function: Function, strategy: Union[Strategy, Text]) -> Optional[Flag]:
         entity = self.get(function, strategy)

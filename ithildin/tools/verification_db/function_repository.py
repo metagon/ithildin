@@ -1,3 +1,4 @@
+from sqlalchemy import and_
 from typing import Optional, Text
 
 from .verification_db import VerificationDB, Contract, Function
@@ -34,9 +35,9 @@ class FunctionRepository:
         elif signature is None and signature_hash is not None:
             query_filter = Function.signature_hash == signature_hash
         else:
-            query_filter = Function.signature == signature & Function.signature_hash == signature_hash
+            query_filter = and_(Function.signature == signature, Function.signature_hash == signature_hash)
 
-        return self.db.session.query(Function).filter(contract_filter & query_filter).first()
+        return self.db.session.query(Function).join(Contract).filter(contract_filter, query_filter).first()
 
     def save(self, contract: Contract, signature: Text, signature_hash: Text) -> Function:
         """

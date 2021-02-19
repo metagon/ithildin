@@ -50,12 +50,12 @@ class MultipleAuthorization(AnalysisStrategy):
     def _analyze(self, state: GlobalState, prev_state: Optional[GlobalState] = None) -> Optional[Result]:
         if prev_state and prev_state.instruction['opcode'] == 'SLOAD' and prev_state.mstate.stack[-1].symbolic is False:
             index = prev_state.mstate.stack[-1].value
-            if index < 0x100000000:
+            if index <= 0xFF:
                 state.mstate.stack[-1].annotate(Storage(index))
         elif prev_state and prev_state.instruction['opcode'] in {'LT', 'GT'}:
             s0_store = self._retrieve_taint(prev_state.mstate.stack[-1], Storage)
             s1_store = self._retrieve_taint(prev_state.mstate.stack[-2], Storage)
-            if s0_store and s1_store and s0_store.index is not None and s1_store.index is not None:
+            if s0_store and s1_store and s0_store != s1_store:
                 state.mstate.stack[-1].annotations.discard(Storage(s0_store.index))
                 state.mstate.stack[-1].annotations.discard(Storage(s1_store.index))
                 state.mstate.stack[-1].annotate(Comparison(s0_store.index, s1_store.index))
