@@ -93,7 +93,9 @@ class RoleBasedAccessControl(AnalysisStrategy):
         elif state.instruction['opcode'] == 'MSTORE' and state.mstate.stack[-2].symbolic is False:
             # Memorize values before being stored to propagate annotations later
             self._mstore_preprocess(state)
-        elif state.instruction['opcode'] == 'SHA3':
+        elif state.instruction['opcode'] == 'SHA3' and \
+                state.mstate.stack[-1].symbolic is False and \
+                state.mstate.stack[-2].symbolic is False:
             # Check if there are annotations for concrete values to be forwarded
             self._sha3_preprocess(state)
         elif state.instruction['opcode'] == 'JUMPI' and {HashedCaller(), HashedRole()}.issubset(state.mstate.stack[-2].annotations):
