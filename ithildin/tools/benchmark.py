@@ -93,11 +93,17 @@ def load_benchmark_state(path=benchmark_state_path) -> Tuple[Report, Set[int], S
         return report, positive_sample, negative_sample
 
 
-def get_binary_answer() -> bool:
-    answer = input('> Your answer [y/n]: ')
-    while answer not in {'y', 'n'}:
-        answer = input('> Enter a valid answer [y/n]: ')
-    return answer == 'y'
+def get_binary_answer(allow_unknown=False) -> Optional[bool]:
+    valid_answers = f"[y/n{'/u' if allow_unknown else ''}]"
+    answer = input(f"> Your answer {valid_answers}: ")
+    while answer not in {'y', 'n'} | ({'u'} if allow_unknown else set()):
+        answer = input(f"> Enter a valid answer {valid_answers}: ")
+    if answer == 'y':
+        return True
+    elif answer == 'n':
+        return False
+    else:
+        return None
 
 
 def check_for_existing_flags(result: Result, contract: Contract, strategy: Text, all_func_hashes: Set[Text], marked_func_hashes: Set[Text]):
@@ -121,6 +127,9 @@ def check_for_existing_flags(result: Result, contract: Contract, strategy: Text,
             else:
                 result.true_negatives += 1
             existing_hashes.add(func_hash)
+        elif flagged_funcion.flag == Flag.UNKNOWN:
+            result.unknown += 1
+            existing_hashes.add(func_hash)
         if flagged_funcion.flag is not None:
             print('! Found existing flag for signature {0.flag}: {0.function.signature}'.format(flagged_funcion))
     return existing_hashes
@@ -129,13 +138,18 @@ def check_for_existing_flags(result: Result, contract: Contract, strategy: Text,
 def ask_for_marked_functions(result: Result, contract: Contract, strategy: Text, existing_hashes: Set[Text]):
     for signature, sig_hash in [(sig, signature_hash(sig)) for sig in result.detected_functions if signature_hash(sig) not in existing_hashes]:
         print('! Has the function "{}" been correctly identified?'.format(signature))
-        answer = get_binary_answer()
-        if answer:
+        answer = get_binary_answer(allow_unknown=True)
+        if answer is True:
             result.true_positives += 1
-        else:
+            flag = Flag.VALID
+        elif answer is False:
             result.false_positives += 1
+            flag = Flag.INVALID
+        else:
+            result.unknown += 1
+            flag = Flag.UNKNOWN
         func_entity = function_repository.save(contract, signature, sig_hash)
-        flagged_function_repository.set_flag(func_entity, strategy, Flag.VALID if answer else Flag.INVALID)
+        flagged_function_repository.set_flag(func_entity, strategy, flag)
 
 
 def ask_for_missing_functions(result: Result, contract: Contract, strategy: Text, valid_func_hashes: Set[Text]) -> Set[Text]:
