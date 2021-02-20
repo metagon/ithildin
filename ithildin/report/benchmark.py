@@ -24,6 +24,7 @@ class Result:
         self.false_positives = 0
         self.true_negatives = 0
         self.false_negatives = 0
+        self.unknown = 0
 
     @property
     def total_hits(self) -> int:
@@ -31,7 +32,7 @@ class Result:
 
     @property
     def total_functions_count(self):
-        return self.true_positives + self.false_positives + self.true_negatives + self.false_negatives
+        return self.true_positives + self.false_positives + self.true_negatives + self.false_negatives + self.unknown
 
     def to_dict(self):
         return {
@@ -94,6 +95,10 @@ class Report:
     @property
     def false_negatives(self) -> int:
         return sum(result.false_negatives for result in self.results if result.verified)
+
+    @property
+    def unknown(self) -> int:
+        return sum(result.unknown for result in self.results if result.verified)
 
     @property
     def precision(self) -> Optional[float]:
