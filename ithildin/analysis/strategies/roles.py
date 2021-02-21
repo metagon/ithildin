@@ -104,10 +104,13 @@ class RoleBasedAccessControl(AnalysisStrategy):
             if state.environment.active_function_name in self.role_cache:
                 role_raw = self.role_cache[state.environment.active_function_name]
                 role_hex = hex(role_raw)
-                role_bytes = codecs.decode(role_hex[2:], 'hex')
-                role_ascii = re.sub(r'[^\x00\x20-\x7E]', '?', role_bytes.decode('ascii', 'replace'))
                 result.add_attribute('Role Hex', role_hex)
-                result.add_attribute('Role ASCII', role_ascii)
+                try:
+                    role_bytes = codecs.decode(role_hex[2:], 'hex')
+                    role_ascii = re.sub(r'[^\x00\x20-\x7E]', '?', role_bytes.decode('ascii', 'replace'))
+                    result.add_attribute('Role ASCII', role_ascii)
+                except ValueError:
+                    result.add_attribute('Role ASCII', 'Unable to decode')
                 del self.role_cache[state.environment.active_function_name]
             return result
 
