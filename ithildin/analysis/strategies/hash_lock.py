@@ -75,6 +75,7 @@ class HashLock(AnalysisStrategy):
             state.mstate.stack[-1].annotate(Input())
         elif prev_state and prev_state.instruction['opcode'] == 'SHA3' and \
                 Input() in state.mstate.stack[-1].annotations and \
+                prev_state.mstate.stack[-2].symbolic is False and \
                 prev_state.mstate.stack[-2].value <= 0x20:
             # Additionally check if the length of the memory content that has been hashed is less than 32 bytes long.
             # This helps mitigate the false positives that result from computing the hashes for looking up storage values,
